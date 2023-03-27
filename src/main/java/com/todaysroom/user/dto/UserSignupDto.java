@@ -21,10 +21,10 @@ public record UserSignupDto(@NotBlank(message = "이메일을 입력하세요.")
 
     public UserEntity toUserEntity() {
         return UserEntity.builder()
-                .userEmail(userEmail())
-                .password(password())
-                .userName(userName())
-                .nickname(nickname())
+                .userEmail(userEmail)
+                .password(password)
+                .userName(userName)
+                .nickname(nickname)
                 .build();
     }
 }
