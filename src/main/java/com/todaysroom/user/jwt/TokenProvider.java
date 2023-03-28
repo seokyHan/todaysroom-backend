@@ -32,6 +32,8 @@ public class TokenProvider implements InitializingBean {
         this.tokenValidityInMilliseconds = tokenValidityInMilliseconds * 1000;
     }
 
+    // InitializingBean을 상속받고 afterPropertiesSet을 override한 이유는 빈이 생성되고
+    // BASE64로 복호화된 시크릿키로 key를 할당하기 위함
     @Override
     public void afterPropertiesSet() throws Exception {
         byte[] keyBytes = Decoders.BASE64.decode(secret);
