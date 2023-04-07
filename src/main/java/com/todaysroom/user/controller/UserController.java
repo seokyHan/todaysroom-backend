@@ -1,10 +1,11 @@
 package com.todaysroom.user.controller;
 
-import com.todaysroom.user.dto.TokenDto;
+import com.todaysroom.user.dto.UserInfoDto;
+import com.todaysroom.user.dto.UserTokenInfoDto;
 import com.todaysroom.user.dto.UserLoginDto;
-import com.todaysroom.user.entity.UserEntity;
 import com.todaysroom.user.jwt.JwtFilter;
 import com.todaysroom.user.jwt.TokenProvider;
+import com.todaysroom.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,22 +29,27 @@ public class UserController {
 
     private final TokenProvider tokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
+    private final UserService userService;
 
 
     @PostMapping("/login")
-    public ResponseEntity<TokenDto> login(@Valid @RequestBody UserLoginDto userLoginDto) {
+    public ResponseEntity<UserTokenInfoDto> login(@Valid @RequestBody UserLoginDto userLoginDto) {
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(userLoginDto.getUserEmail(), userLoginDto.getPassword());
+                new UsernamePasswordAuthenticationToken(userLoginDto.userEmail(), userLoginDto.password());
 
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwt = tokenProvider.createToken(authentication);
 
+        UserInfoDto userInfo = userService.getUserInfo(userLoginDto.userEmail());
+        UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.from(userInfo, jwt);
+
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, JwtFilter.AUTHORIZATION_HEADER + jwt);
-        // 수정 필요
-        return new ResponseEntity<>(httpHeaders, HttpStatus.OK);
+
+
+        return new ResponseEntity<>(userTokenInfoDto, httpHeaders, HttpStatus.OK);
 
     }
 
