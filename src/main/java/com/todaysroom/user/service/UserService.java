@@ -14,10 +14,9 @@ public class UserService {
 
     private UserRepository userRepository;
 
-    //refactoring 필요 필요 데이터만 가져올 수 있도록 커스터마이징
     @Transactional
     public UserInfoDto getUserInfo(String email){
-        UserEntity userEntity = userRepository.findUserByEmail(email);
+        UserEntity userEntity = userRepository.findByUserEmail(email);
 
         return UserInfoDto.from(userEntity);
     }
