@@ -9,6 +9,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -18,11 +20,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails loadUserByUsername(String userEmail) throws UsernameNotFoundException {
-        return userRepository.findOneWithAuthoritiesByUserName(userEmail)
+        return userRepository.findOneWithAuthoritiesByUserEmail(userEmail)
                 .map(user -> createUser(userEmail, user))
                 .orElseThrow(() -> new UsernameNotFoundException(userEmail + " DB에서 찾을 수 없음."));
     }
@@ -36,6 +39,6 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .map(authority -> new SimpleGrantedAuthority(authority.getAuthorityName()))
                 .collect(Collectors.toList());
 
-        return new User(user.getUserEmail(), user.getPassword(), grantedAuthorities);
+        return new User(user.getUserEmail(), passwordEncoder.encode(user.getPassword()), grantedAuthorities);
     }
 }

@@ -44,8 +44,9 @@ public class UserController {
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, JwtFilter.AUTHORIZATION_HEADER + jwt);
-
-
+        System.out.println("---------------------------------------------------");
+        System.out.println(new ResponseEntity<>(userTokenInfoDto, httpHeaders, HttpStatus.OK));
+        System.out.println("---------------------------------------------------");
         return new ResponseEntity<>(userTokenInfoDto, httpHeaders, HttpStatus.OK);
 
     }
