@@ -1,6 +1,6 @@
 package com.todaysroom.user.jwt;
 
-import com.todaysroom.types.AuthType;
+import com.todaysroom.user.types.AuthType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -29,6 +29,7 @@ public class JwtFilter extends GenericFilterBean {
         String jwt = resolveToken(httpServletRequest);
         String requestURI = httpServletRequest.getRequestURI();
 
+        // 토큰 유효성 체크
         if(StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)){
             Authentication authentication = tokenProvider.getAuthentication(jwt);
             SecurityContextHolder.getContext().setAuthentication(authentication);

@@ -1,4 +1,4 @@
-package com.todaysroom.types;
+package com.todaysroom.user.types;
 
 public enum AuthType {
 

@@ -5,7 +5,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.Length;
 
-public record UserTokenInfoDto(String token,
+public record UserTokenInfoDto(String accessToken,
+                               String refreshToken,
                                Long id,
                                @NotBlank(message = "이메일을 입력하세요.")
                                @Email(message = "이메일 형식을 확인하세요.")
@@ -18,8 +19,9 @@ public record UserTokenInfoDto(String token,
                                String nickname,
                                String recentSearch) {
 
-    public static UserTokenInfoDto from(UserInfoDto userInfoDto, String token) {
-        return new UserTokenInfoDto(token,
+    public static UserTokenInfoDto from(UserInfoDto userInfoDto, String accessToken, String refreshToken) {
+        return new UserTokenInfoDto(accessToken,
+                refreshToken,
                 userInfoDto.id(),
                 userInfoDto.name(),
                 userInfoDto.userEmail(),

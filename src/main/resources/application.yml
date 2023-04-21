@@ -1,6 +1,7 @@
 server:
   port: 9000
 
+
 spring:
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
@@ -16,6 +17,11 @@ spring:
         format_sql: true #To beautify or pretty print the SQL
         show_sql: true #show sql
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
 #HS512 알고리즘을 사용할 것이기 때문에 512bit, 즉 64byte 이상의 secret key를 사용해야 한다.
 #echo 'silvernine-tech-spring-boot-jwt-tutorial-secret-silvernine-tech-spring-boot-jwt-tutorial-secret'|base64
 jwt:
@@ -23,6 +29,7 @@ jwt:
   secret: eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTY3OTU0OTIwNiwiaWF0IjoxNjc5NTQ5MjA2fQyZXQK1
 
   token-validity-in-seconds: 86400
+  refresh-token-validity-in-sec: 1209600
 
 logging:
   level:
