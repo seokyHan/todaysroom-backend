@@ -24,16 +24,13 @@ public class TokenProvider implements InitializingBean {
     private static final String AUTHORITIES_KEY = AuthType.AUTHORITIES_KEY.getByItem();
     private final String secret;
     private final long tokenValidityInMilliseconds;
-    private final long refreshTokenValidityInMilliseconds;
     private Key key;
 
     public TokenProvider(@Value("${jwt.secret}")  String secret,
-                         @Value("${jwt.token-validity-in-seconds}") long tokenValidityInMilliseconds,
-                         @Value("${jwt.refresh-token-validity-in-sec}") long refreshTokenValidityInMilliseconds
+                         @Value("${jwt.token-validity-in-seconds}") long tokenValidityInMilliseconds
                          ) {
         this.secret = secret;
         this.tokenValidityInMilliseconds = tokenValidityInMilliseconds * 1000;
-        this.refreshTokenValidityInMilliseconds = refreshTokenValidityInMilliseconds * 1000;
     }
 
     // InitializingBean을 상속받고 afterPropertiesSet을 override한 이유는 빈이 생성되고
@@ -62,12 +59,10 @@ public class TokenProvider implements InitializingBean {
 
     public String createRefreshToken(Authentication authentication){
         long now = (new Date()).getTime();
-        Date validity = new Date(now + refreshTokenValidityInMilliseconds);
 
         return Jwts.builder()
                 .setSubject(authentication.getName())
                 .signWith(key, SignatureAlgorithm.HS512)
-                .setExpiration(validity)
                 .compact();
     }
 

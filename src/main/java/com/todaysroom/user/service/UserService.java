@@ -19,6 +19,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -40,19 +42,17 @@ public class UserService {
         String accessToken = tokenProvider.createAccessToken(authentication);
         String refreshToken = tokenProvider.createRefreshToken(authentication);
 
-        // 기존 토큰 값이 존재하면 변경, 없으면 새로 생성
-        refreshTokenRedisRepository.findById(userLoginDto.userEmail())
-                .ifPresentOrElse(
-                        (tokenEntity)->tokenEntity.changeToken(refreshToken),
-                        ()->refreshTokenRedisRepository.save(
-                                RefreshToken.builder().
-                                        id(userLoginDto.userEmail()).
-                                        token(refreshToken)
-                                        .build()
-                        )
-                );
+        //로그아웃시 redis 메모리 데이터 삭제 구현
+        //access token 재발급 구현
 
         UserInfoDto userInfo = UserInfoDto.from(userRepository.findByUserEmail(userLoginDto.userEmail()));
+        refreshTokenRedisRepository.save(
+                RefreshToken.builder().
+                        token(refreshToken).
+                        id(userInfo.id())
+                        .build()
+        );
+
         UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.from(userInfo, accessToken, refreshToken);
 
         HttpHeaders httpHeaders = new HttpHeaders();
