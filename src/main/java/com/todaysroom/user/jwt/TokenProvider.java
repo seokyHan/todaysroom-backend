@@ -58,7 +58,6 @@ public class TokenProvider implements InitializingBean {
     }
 
     public String createRefreshToken(Authentication authentication){
-        long now = (new Date()).getTime();
 
         return Jwts.builder()
                 .setSubject(authentication.getName())
