@@ -4,6 +4,7 @@ import com.todaysroom.user.types.AuthType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,6 +20,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 public class TokenProvider implements InitializingBean {
     private static final String AUTHORITIES_KEY = AuthType.AUTHORITIES_KEY.getByItem();
@@ -88,13 +90,12 @@ public class TokenProvider implements InitializingBean {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-            throw new JwtException("잘못된 JWT 서명입니다.");
-        } catch (ExpiredJwtException e) {
-            throw new JwtException("만료된 JWT 토큰입니다.");
+            log.error("잘못된 JWT 서명입니다.");
         } catch (UnsupportedJwtException e) {
-            throw new JwtException("지원되지 않는 JWT 토큰입니다.");
+            log.error("지원되지 않는 JWT 토큰입니다.");
         } catch (IllegalArgumentException e) {
-            throw new JwtException("JWT 토큰이 잘못되었습니다.");
+            log.error("JWT 토큰이 잘못되었습니다.");
         }
+        return false;
     }
 }
