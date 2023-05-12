@@ -4,6 +4,7 @@ import com.todaysroom.user.types.AuthType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.security.Key;
 import java.util.Arrays;
@@ -24,6 +26,8 @@ import java.util.stream.Collectors;
 @Component
 public class TokenProvider implements InitializingBean {
     private static final String AUTHORITIES_KEY = AuthType.AUTHORITIES_KEY.getByItem();
+    public static final String AUTHORIZATION_HEADER = AuthType.AUTHORIZATION_HEADER.getByItem();
+    public static final String TOKEN_HEADER = AuthType.TOKEN_HEADER.getByItem();
     private final String secret;
     private final long tokenValidityInMilliseconds;
     private Key key;
@@ -85,6 +89,16 @@ public class TokenProvider implements InitializingBean {
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 
+    // request header에서 토큰 정보 가져옴
+    public String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith(TOKEN_HEADER)){
+            return bearerToken.substring(TOKEN_HEADER.length());
+        }
+
+        return null;
+    }
+
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
@@ -97,5 +111,6 @@ public class TokenProvider implements InitializingBean {
             log.error("JWT 토큰이 잘못되었습니다.");
         }
         return false;
+
     }
 }

@@ -4,18 +4,20 @@ import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.index.Indexed;
 
 @Getter
 @RedisHash(value = "RefreshToken", timeToLive = 1209600)
 public class RefreshToken {
     @Id
+    @Indexed
+    private String email;
     private String token;
-    private Long id;
 
     @Builder
-    public RefreshToken(String token, Long id){
+    public RefreshToken(String email, String token){
+        this.email = email;
         this.token = token;
-        this.id = id;
     }
 
     public void changeToken(String token) {

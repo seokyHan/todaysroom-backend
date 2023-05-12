@@ -2,8 +2,9 @@ package com.todaysroom.user.types;
 
 import org.springframework.http.HttpStatus;
 
-public enum TokenType {
+public enum ErrorCode {
     //JWT
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "ROLE-0002", "Unauthorized"),
     JWT_ACCESS_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "TOKEN-0001", "Access token has expired"),
     JWT_REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "TOKEN-0002", "Refresh token has expired");
     
@@ -24,7 +25,7 @@ public enum TokenType {
         return message;
     }
 
-    TokenType(HttpStatus status, String code, String message) {
+    ErrorCode(HttpStatus status, String code, String message) {
         this.status = status;
         this.code = code;
         this.message = message;
