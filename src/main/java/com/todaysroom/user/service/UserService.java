@@ -12,6 +12,7 @@ import com.todaysroom.user.redis.RefreshToken;
 import com.todaysroom.user.redis.RefreshTokenRedisRepository;
 import com.todaysroom.user.repository.UserRepository;
 import com.todaysroom.user.types.ErrorCode;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -72,18 +73,34 @@ public class UserService {
         String email = payloadMap.get("sub");
 
         // Redis 저장된 RefreshToken 찾은 후 없으면 401 에러
-        Optional<RefreshToken> refreshToken = refreshTokenRedisRepository.findById(email);
-        refreshToken.orElseThrow(()-> new CustomException(ErrorCode.UNAUTHORIZED));
+        RefreshToken refreshTokenEntity = refreshTokenRedisRepository.findById(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
 
         // RefreshToken이 만료 됐는지
-        boolean isRefreshTokenValid = tokenProvider.validateToken(refreshToken.get().getToken());
-        if(isRefreshTokenValid){
-
+        if (!tokenProvider.validateToken(refreshTokenEntity.getToken())) {
+            throw new CustomException(ErrorCode.JWT_REFRESH_TOKEN_EXPIRED);
         }
 
+        UserEntity userInfo = userRepository.findByUserEmail(email);
 
+        if (userInfo == null) {
+            return ResponseEntity.badRequest().build();
+        }
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        String newAccessToken = tokenProvider.createAccessToken(SecurityContextHolder.getContext().getAuthentication());
+        String newRefreshToken = tokenProvider.createRefreshToken(SecurityContextHolder.getContext().getAuthentication());
+
+        UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.from(userInfo, newAccessToken, newRefreshToken);
+
+        refreshTokenRedisRepository.save( RefreshToken.builder().
+                email(userTokenInfoDto.userEmail()).
+                token(newRefreshToken)
+                .build());
+
+        HttpHeaders httpHeaders = addHttpHeaders(newAccessToken);
+
+        return new ResponseEntity<>(userTokenInfoDto, httpHeaders, HttpStatus.OK);
+
     }
 
     private HttpHeaders addHttpHeaders(String accessToken){
