@@ -28,7 +28,7 @@ public class UserController {
         return userService.userLogin(userLoginDto);
     }
 
-    @PostMapping
+    @PostMapping("/reissue")
     public ResponseEntity<UserTokenInfoDto> reissue(HttpServletRequest request){
 
         return userService.reissue(request);
