@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -52,6 +53,11 @@ public class UserService {
         String refreshToken = tokenProvider.createRefreshToken(authentication);
 
         UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.from(userRepository.findByUserEmail(userLoginDto.userEmail()), accessToken, refreshToken);
+
+        return getUserTokenInfoDtoResponseEntity(accessToken, refreshToken, userTokenInfoDto);
+    }
+
+    private ResponseEntity<UserTokenInfoDto> getUserTokenInfoDtoResponseEntity(String accessToken, String refreshToken, UserTokenInfoDto userTokenInfoDto) {
         refreshTokenRedisRepository.save(
                 RefreshToken.builder().
                         email(userTokenInfoDto.userEmail()).
@@ -59,7 +65,15 @@ public class UserService {
                         .build()
         );
 
-        HttpHeaders httpHeaders = addHttpHeaders(accessToken);
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .maxAge(1209600)
+                .path("/")
+                //.secure(true)
+                .sameSite("None")
+                .httpOnly(true)
+                .build();
+        HttpHeaders httpHeaders = addHttpHeaders(accessToken, cookie.toString());
+
 
         return new ResponseEntity<>(userTokenInfoDto, httpHeaders, HttpStatus.OK);
     }
@@ -92,20 +106,14 @@ public class UserService {
 
         UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.from(userInfo, newAccessToken, newRefreshToken);
 
-        refreshTokenRedisRepository.save( RefreshToken.builder().
-                email(userTokenInfoDto.userEmail()).
-                token(newRefreshToken)
-                .build());
-
-        HttpHeaders httpHeaders = addHttpHeaders(newAccessToken);
-
-        return new ResponseEntity<>(userTokenInfoDto, httpHeaders, HttpStatus.OK);
+        return getUserTokenInfoDtoResponseEntity(accessToken, newRefreshToken, userTokenInfoDto);
 
     }
 
-    private HttpHeaders addHttpHeaders(String accessToken){
+    private HttpHeaders addHttpHeaders(String accessToken, String refreshToken){
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(TokenProvider.AUTHORIZATION_HEADER, TokenProvider.AUTHORIZATION_HEADER + accessToken);
+        httpHeaders.add(TokenProvider.AUTHORIZATION_HEADER, TokenProvider.AUTHORIZATION_HEADER + refreshToken);
 
         return httpHeaders;
     }
