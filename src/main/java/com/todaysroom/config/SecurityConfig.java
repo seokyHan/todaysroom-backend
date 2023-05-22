@@ -46,9 +46,10 @@ public class SecurityConfig{
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:8080"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Origin", "Access-Control-Allow-Origin", "Content-Type",
-                "Accept", "Authorization", "Origin, Accept", "X-Requested-With",
+                "Accept", "Authorization", "Origin, Accept", "X-Requested-With", "Set-Cookie",
                 "Access-Control-Request-Method", "Access-Control-Request-Headers"));
         configuration.setMaxAge(6000L);
+        // configuration.setAllowCredentials(true); 내 서버가 응답할 때 json을 JS에서 처리할 수 있게 설정
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

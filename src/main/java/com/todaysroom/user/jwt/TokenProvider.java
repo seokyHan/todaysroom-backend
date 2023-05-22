@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 public class TokenProvider implements InitializingBean {
     private static final String AUTHORITIES_KEY = AuthType.AUTHORITIES_KEY.getByItem();
     public static final String AUTHORIZATION_HEADER = AuthType.AUTHORIZATION_HEADER.getByItem();
+    public static final String REFRESHTOKEN_HEADER = AuthType.REFRESHTOKEN_HEADER.getByItem();
     public static final String TOKEN_HEADER = AuthType.TOKEN_HEADER.getByItem();
     private final String secret;
     private final long tokenValidityInMilliseconds;

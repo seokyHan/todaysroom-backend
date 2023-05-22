@@ -57,27 +57,6 @@ public class UserService {
         return getUserTokenInfoDtoResponseEntity(accessToken, refreshToken, userTokenInfoDto);
     }
 
-    private ResponseEntity<UserTokenInfoDto> getUserTokenInfoDtoResponseEntity(String accessToken, String refreshToken, UserTokenInfoDto userTokenInfoDto) {
-        refreshTokenRedisRepository.save(
-                RefreshToken.builder().
-                        email(userTokenInfoDto.userEmail()).
-                        token(refreshToken)
-                        .build()
-        );
-
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
-                .maxAge(1209600)
-                .path("/")
-                //.secure(true)
-                .sameSite("None")
-                .httpOnly(true)
-                .build();
-        HttpHeaders httpHeaders = addHttpHeaders(accessToken, cookie.toString());
-
-
-        return new ResponseEntity<>(userTokenInfoDto, httpHeaders, HttpStatus.OK);
-    }
-
     @Transactional
     public ResponseEntity<UserTokenInfoDto> reissue(HttpServletRequest request) {
         //SecurityContextHolder.getContext().getAuthentication()
@@ -110,10 +89,30 @@ public class UserService {
 
     }
 
+    private ResponseEntity<UserTokenInfoDto> getUserTokenInfoDtoResponseEntity(String accessToken, String refreshToken, UserTokenInfoDto userTokenInfoDto) {
+        refreshTokenRedisRepository.save(
+                RefreshToken.builder().
+                        email(userTokenInfoDto.userEmail()).
+                        token(refreshToken)
+                        .build()
+        );
+
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .maxAge(1209600)
+                .path("/")
+                //.secure(true)
+                .sameSite("None")
+                .httpOnly(true)
+                .build();
+        HttpHeaders httpHeaders = addHttpHeaders(accessToken, cookie.toString());
+
+
+        return new ResponseEntity<>(userTokenInfoDto, httpHeaders, HttpStatus.OK);
+    }
     private HttpHeaders addHttpHeaders(String accessToken, String refreshToken){
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(TokenProvider.AUTHORIZATION_HEADER, TokenProvider.AUTHORIZATION_HEADER + accessToken);
-        httpHeaders.add(TokenProvider.AUTHORIZATION_HEADER, TokenProvider.AUTHORIZATION_HEADER + refreshToken);
+        httpHeaders.add(TokenProvider.REFRESHTOKEN_HEADER, TokenProvider.REFRESHTOKEN_HEADER + refreshToken);
 
         return httpHeaders;
     }

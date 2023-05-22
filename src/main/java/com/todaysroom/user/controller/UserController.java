@@ -10,9 +10,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -32,6 +35,16 @@ public class UserController {
     public ResponseEntity<UserTokenInfoDto> reissue(HttpServletRequest request){
 
         return userService.reissue(request);
+    }
+
+    @PostMapping("/test")
+    public ResponseEntity postMember() {
+
+
+            System.out.println("key");
+
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 
