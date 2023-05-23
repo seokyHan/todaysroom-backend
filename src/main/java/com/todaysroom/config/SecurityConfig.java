@@ -49,7 +49,7 @@ public class SecurityConfig{
                 "Accept", "Authorization", "Origin, Accept", "X-Requested-With", "Set-Cookie",
                 "Access-Control-Request-Method", "Access-Control-Request-Headers"));
         configuration.setMaxAge(6000L);
-        // configuration.setAllowCredentials(true); 내 서버가 응답할 때 json을 JS에서 처리할 수 있게 설정
+        configuration.setAllowCredentials(true); // 내 서버가 응답할 때 json을 JS에서 처리할 수 있게 설정
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

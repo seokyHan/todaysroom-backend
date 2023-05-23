@@ -4,6 +4,7 @@ package com.todaysroom.user.controller;
 import com.todaysroom.user.dto.UserTokenInfoDto;
 import com.todaysroom.user.dto.UserLoginDto;
 import com.todaysroom.user.service.UserService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -38,11 +39,14 @@ public class UserController {
     }
 
     @PostMapping("/test")
-    public ResponseEntity postMember() {
+    public ResponseEntity postMember(HttpServletRequest request) {
 
 
-            System.out.println("key");
-
+        Cookie rc[] = request.getCookies();
+        System.out.println(rc.length);
+        for (Cookie cookie : rc) { //벨류에 넣었던 리프레쉬토큰을 꺼내서 넣어준다.
+            System.out.println(cookie.getValue());
+        }
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

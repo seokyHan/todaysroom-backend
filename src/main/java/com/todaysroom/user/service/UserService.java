@@ -100,7 +100,7 @@ public class UserService {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .maxAge(1209600)
                 .path("/")
-                //.secure(true)
+                .secure(true)
                 .sameSite("None")
                 .httpOnly(true)
                 .build();
