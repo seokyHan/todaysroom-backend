@@ -111,8 +111,8 @@ public class UserService {
     }
     private HttpHeaders addHttpHeaders(String accessToken, String refreshToken){
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(TokenProvider.AUTHORIZATION_HEADER, TokenProvider.AUTHORIZATION_HEADER + accessToken);
-        httpHeaders.add(TokenProvider.REFRESHTOKEN_HEADER, TokenProvider.REFRESHTOKEN_HEADER + refreshToken);
+        httpHeaders.add(TokenProvider.AUTHORIZATION_HEADER, accessToken);
+        httpHeaders.add(TokenProvider.REFRESHTOKEN_HEADER, refreshToken);
 
         return httpHeaders;
     }
