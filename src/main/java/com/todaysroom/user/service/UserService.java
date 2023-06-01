@@ -16,6 +16,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -32,6 +33,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class UserService {
 
@@ -59,7 +61,6 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<UserTokenInfoDto> reissue(HttpServletRequest request) {
-        //SecurityContextHolder.getContext().getAuthentication()
         // AccessToken decode 후 payload 값 추출
         String accessToken = tokenProvider.resolveToken(request);
         HashMap<String, String> payloadMap = getPayloadByToken(accessToken);
@@ -87,6 +88,30 @@ public class UserService {
 
         return getUserTokenInfoDtoResponseEntity(accessToken, newRefreshToken, userTokenInfoDto);
 
+    }
+
+    @Transactional
+    public ResponseEntity refreshTokenTest (HttpServletRequest request){
+        String accessToken = tokenProvider.resolveToken(request);
+        log.info("토큰은 잘 나옴? : {}",accessToken);
+        HashMap<String, String> payloadMap = getPayloadByToken(accessToken);
+        String email = payloadMap.get("sub");
+
+        log.info("이메일 잘 나옴? : {}",email);
+
+        RefreshToken refreshTokenEntity = refreshTokenRedisRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
+
+
+        log.info("redis Token : {}",refreshTokenEntity.getToken());
+        log.info("header Token : {}",request.getHeader("cookie"));
+        if(refreshTokenEntity.getToken().equals(request.getHeader("cookie"))){
+            log.info("같아!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        }else{
+            log.info("달라!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        }
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     private ResponseEntity<UserTokenInfoDto> getUserTokenInfoDtoResponseEntity(String accessToken, String refreshToken, UserTokenInfoDto userTokenInfoDto) {

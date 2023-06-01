@@ -39,13 +39,9 @@ public class UserController {
     }
 
     @PostMapping("/test")
-    public ResponseEntity postMember(@RequestHeader("cookie") String refreshToken) {
+    public ResponseEntity postMember(HttpServletRequest request) {
 
-        log.info("쿠키 왜 안담겨,,,");
-        log.info(refreshToken);
-
-
-        return new ResponseEntity<>(HttpStatus.OK);
+        return userService.refreshTokenTest(request);
     }
 
 

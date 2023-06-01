@@ -1,9 +1,7 @@
 package com.todaysroom.user.dto;
 
 import com.todaysroom.user.entity.UserEntity;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import org.hibernate.validator.constraints.Length;
+
 
 public record UserTokenInfoDto(String accessToken,
                                String refreshToken,
@@ -17,8 +15,8 @@ public record UserTokenInfoDto(String accessToken,
         return new UserTokenInfoDto(accessToken,
                 refreshToken,
                 userEntity.getId(),
-                userEntity.getUserName(),
                 userEntity.getUserEmail(),
+                userEntity.getUserName(),
                 userEntity.getNickname(),
                 userEntity.getRecentSearch());
     }

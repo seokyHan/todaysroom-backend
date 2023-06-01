@@ -65,9 +65,13 @@ public class TokenProvider implements InitializingBean {
     }
 
     public String createRefreshToken(Authentication authentication){
+        String authorities = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
 
         return Jwts.builder()
                 .setSubject(authentication.getName())
+                .claim(AUTHORITIES_KEY, authorities)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
