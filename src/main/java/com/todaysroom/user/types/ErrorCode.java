@@ -6,7 +6,8 @@ public enum ErrorCode {
     //JWT
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "ROLE-0002", "Unauthorized"),
     JWT_ACCESS_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "TOKEN-0001", "Access token has expired"),
-    JWT_REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "TOKEN-0002", "Refresh token has expired");
+    JWT_REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "TOKEN-0002", "Refresh token has expired"),
+    JWT_REFRESH_TOKEN_NOT_MATCHED(HttpStatus.UNAUTHORIZED, "TOKEN-0003", "Refresh token not matched");
     
 
     HttpStatus status;

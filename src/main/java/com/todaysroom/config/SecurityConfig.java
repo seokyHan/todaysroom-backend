@@ -77,6 +77,7 @@ public class SecurityConfig{
                 .authorizeHttpRequests()
                 .requestMatchers("/users/login").permitAll()
                 .requestMatchers("/users/signup").permitAll()
+                .requestMatchers("/users/reissue").permitAll()
 
                 .anyRequest().authenticated()
                 .and()

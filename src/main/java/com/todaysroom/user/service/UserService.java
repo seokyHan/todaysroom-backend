@@ -11,6 +11,7 @@ import com.todaysroom.user.jwt.TokenProvider;
 import com.todaysroom.user.redis.RefreshToken;
 import com.todaysroom.user.redis.RefreshTokenRedisRepository;
 import com.todaysroom.user.repository.UserRepository;
+import com.todaysroom.user.types.AuthType;
 import com.todaysroom.user.types.ErrorCode;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,42 +52,85 @@ public class UserService {
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String accessToken = tokenProvider.createAccessToken(authentication);
-        String refreshToken = tokenProvider.createRefreshToken(authentication);
+        UserTokenInfoDto tokenInfo = tokenProvider.generateToken(authentication);
+        UserEntity userEntity = userRepository.findByUserEmail(userLoginDto.userEmail());
 
-        UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.from(userRepository.findByUserEmail(userLoginDto.userEmail()), accessToken, refreshToken);
+        UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.builder()
+                .accessToken(tokenInfo.accessToken())
+                .refreshToken(tokenInfo.refreshToken())
+                .id(userEntity.getId())
+                .userEmail(userEntity.getUserEmail())
+                .userName(userEntity.getUserName())
+                .nickname(userEntity.getNickname())
+                .recentSearch(userEntity.getRecentSearch())
+                .build();
 
-        return getUserTokenInfoDtoResponseEntity(accessToken, refreshToken, userTokenInfoDto);
+        RefreshToken refreshToken = RefreshToken.builder()
+                .email(userTokenInfoDto.userEmail())
+                .token(userTokenInfoDto.refreshToken())
+                .authorities(authentication.getAuthorities())
+                .build();
+
+        refreshTokenRedisRepository.save(refreshToken);
+
+        return setResponseData(userTokenInfoDto);
     }
 
     @Transactional
     public ResponseEntity<UserTokenInfoDto> reissue(HttpServletRequest request) {
         // AccessToken decode 후 payload 값 추출
-        String accessToken = tokenProvider.resolveToken(request);
-        HashMap<String, String> payloadMap = getPayloadByToken(accessToken);
+//        String accessToken = tokenProvider.resolveToken(request);
+        String cookieRefreshToken = request.getHeader(AuthType.REISSUE_REFRESHTOKEN_HEADER.getByItem()).substring(13);
+        HashMap<String, String> payloadMap = getPayloadByToken(cookieRefreshToken);
         String email = payloadMap.get("sub");
 
+        log.info("이메일 잘 나옴1 : {}", email);
         // Redis 저장된 RefreshToken 찾은 후 없으면 401 에러
-        RefreshToken refreshTokenEntity = refreshTokenRedisRepository.findById(email)
+        RefreshToken refreshTokenEntity = refreshTokenRedisRepository.findByToken(cookieRefreshToken)
                 .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
 
+        log.info("이메일 잘 나옴2 : {}", email);
+
+        // cookie header에 담긴 refreshToken과 Redis에 저장된 RefreshToken 값 일치 여부
+//        if(!refreshTokenEntity.getToken().equals(cookieRefreshToken)){
+//            throw new CustomException(ErrorCode.JWT_REFRESH_TOKEN_NOT_MATCHED);
+//        }
+
+        log.info("이메일 잘 나옴3 : {}");
         // RefreshToken이 만료 됐는지
         if (!tokenProvider.validateToken(refreshTokenEntity.getToken())) {
             throw new CustomException(ErrorCode.JWT_REFRESH_TOKEN_EXPIRED);
         }
-
-        UserEntity userInfo = userRepository.findByUserEmail(email);
+        log.info("이메일 잘 나옴4 : {}");
+        UserEntity userInfo = userRepository.findByUserEmail(refreshTokenEntity.getEmail());
 
         if (userInfo == null) {
             return ResponseEntity.badRequest().build();
         }
+        log.info("이메일 잘 나옴5 : {}");
 
-        String newAccessToken = tokenProvider.createAccessToken(SecurityContextHolder.getContext().getAuthentication());
-        String newRefreshToken = tokenProvider.createRefreshToken(SecurityContextHolder.getContext().getAuthentication());
+        UserTokenInfoDto tokenInfo = tokenProvider.generateToken(refreshTokenEntity.getEmail(), refreshTokenEntity.getAuthorities());
 
-        UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.from(userInfo, newAccessToken, newRefreshToken);
+        RefreshToken refreshToken = RefreshToken.builder()
+                .email(refreshTokenEntity.getEmail())
+                .token(tokenInfo.refreshToken())
+                .authorities(refreshTokenEntity.getAuthorities())
+                .build();
 
-        return getUserTokenInfoDtoResponseEntity(accessToken, newRefreshToken, userTokenInfoDto);
+        refreshTokenRedisRepository.save(refreshToken);
+
+        log.info("이메일 잘 나옴6 : {}");
+        UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.builder()
+                .accessToken(tokenInfo.accessToken())
+                .refreshToken(tokenInfo.refreshToken())
+                .id(userInfo.getId())
+                .userEmail(userInfo.getUserEmail())
+                .userName(userInfo.getUserName())
+                .nickname(userInfo.getNickname())
+                .recentSearch(userInfo.getRecentSearch())
+                .build();
+        log.info("이메일 잘 나옴7 : {}");
+        return setResponseData(userTokenInfoDto);
 
     }
 
@@ -104,8 +148,8 @@ public class UserService {
 
 
         log.info("redis Token : {}",refreshTokenEntity.getToken());
-        log.info("header Token : {}",request.getHeader("cookie"));
-        if(refreshTokenEntity.getToken().equals(request.getHeader("cookie"))){
+        log.info("header Token : {}",request.getHeader("cookie").substring(13));
+        if(refreshTokenEntity.getToken().equals(request.getHeader("cookie").substring(13))){
             log.info("같아!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         }else{
             log.info("달라!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -114,22 +158,15 @@ public class UserService {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    private ResponseEntity<UserTokenInfoDto> getUserTokenInfoDtoResponseEntity(String accessToken, String refreshToken, UserTokenInfoDto userTokenInfoDto) {
-        refreshTokenRedisRepository.save(
-                RefreshToken.builder().
-                        email(userTokenInfoDto.userEmail()).
-                        token(refreshToken)
-                        .build()
-        );
-
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+    private ResponseEntity<UserTokenInfoDto> setResponseData(UserTokenInfoDto userTokenInfoDto) {
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", userTokenInfoDto.refreshToken())
                 .maxAge(1209600)
                 .path("/")
                 .secure(true)
                 .sameSite("None")
                 .httpOnly(true)
                 .build();
-        HttpHeaders httpHeaders = addHttpHeaders(accessToken, cookie.toString());
+        HttpHeaders httpHeaders = addHttpHeaders(userTokenInfoDto.accessToken(), cookie.toString());
 
 
         return new ResponseEntity<>(userTokenInfoDto, httpHeaders, HttpStatus.OK);
@@ -148,6 +185,8 @@ public class UserService {
 
             Base64.Decoder decoder = Base64.getDecoder();
             String payload = new String(decoder.decode(splitJwt[1] .getBytes()));
+
+            log.info("decode token {}", payload);
 
             return new ObjectMapper().readValue(payload, HashMap.class);
         } catch (JsonProcessingException e) {

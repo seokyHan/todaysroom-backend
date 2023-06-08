@@ -5,6 +5,7 @@ public enum AuthType {
     AUTHORITIES_KEY("auth"),
     AUTHORIZATION_HEADER("Authorization"),
     REFRESHTOKEN_HEADER("Set-Cookie"),
+    REISSUE_REFRESHTOKEN_HEADER("cookie"),
     TOKEN_HEADER("Bearer ");
 
     final private String item;
