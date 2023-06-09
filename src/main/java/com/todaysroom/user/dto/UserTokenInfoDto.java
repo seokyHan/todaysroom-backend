@@ -12,16 +12,6 @@ public record UserTokenInfoDto(String accessToken,
                                String nickname,
                                String recentSearch) {
 
-//    public static UserTokenInfoDto from(UserEntity userEntity, String accessToken, String refreshToken) {
-//        return new UserTokenInfoDto(accessToken,
-//                refreshToken,
-//                userEntity.getId(),
-//                userEntity.getUserEmail(),
-//                userEntity.getUserName(),
-//                userEntity.getNickname(),
-//                userEntity.getRecentSearch());
-//    }
-
     @Builder
     public UserTokenInfoDto {
     }
