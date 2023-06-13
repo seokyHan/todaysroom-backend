@@ -14,6 +14,7 @@ import com.todaysroom.user.repository.UserRepository;
 import com.todaysroom.user.types.AuthType;
 import com.todaysroom.user.types.ErrorCode;
 import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -117,6 +118,18 @@ public class UserService {
 
         return setResponseData(userTokenInfoDto);
 
+    }
+
+    public ResponseEntity refreshTokenTest (HttpServletRequest request){
+        log.info("header에서 가져오는 쿠키 {}", request.getHeader(AuthType.REISSUE_REFRESHTOKEN_HEADER.getByItem()).substring(13));
+
+        Cookie[] cookies = request.getCookies();
+
+        for(Cookie c : cookies){
+            log.info("쿠키이름 : {} 쿠키 값 : {}", c.getName(), c.getValue());
+        }
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     private ResponseEntity<UserTokenInfoDto> setResponseData(UserTokenInfoDto userTokenInfoDto) {
