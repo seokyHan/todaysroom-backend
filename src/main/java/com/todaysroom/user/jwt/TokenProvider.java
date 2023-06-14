@@ -32,13 +32,16 @@ public class TokenProvider implements InitializingBean {
     public static final String TOKEN_HEADER = AuthType.TOKEN_HEADER.getByItem();
     private final String secret;
     private final long tokenValidityInMilliseconds;
+    private final long refreshTokenValidityInMilliseconds;
     private Key key;
 
     public TokenProvider(@Value("${jwt.secret}")  String secret,
-                         @Value("${jwt.token-validity-in-seconds}") long tokenValidityInMilliseconds
+                         @Value("${jwt.token-validity-in-seconds}") long tokenValidityInMilliseconds,
+                         @Value("${jwt.refresh-token-validity-in-sec}") long refreshTokenValidityInMilliseconds
                          ) {
         this.secret = secret;
         this.tokenValidityInMilliseconds = tokenValidityInMilliseconds * 1000;
+        this.refreshTokenValidityInMilliseconds = refreshTokenValidityInMilliseconds * 1000;
     }
 
     // InitializingBean을 상속받고 afterPropertiesSet을 override한 이유는 빈이 생성되고
@@ -64,6 +67,8 @@ public class TokenProvider implements InitializingBean {
 
         long now = (new Date()).getTime();
         Date validity = new Date(now + tokenValidityInMilliseconds);
+        Date rtkValidity = new Date(now + refreshTokenValidityInMilliseconds);
+
 
         //Generate AccessToken
         String accessToken = Jwts.builder()
@@ -73,12 +78,15 @@ public class TokenProvider implements InitializingBean {
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
 
+
         //Generate RefreshToken
         String refreshToken = Jwts.builder()
                 .setSubject(name)
                 .claim(AUTHORITIES_KEY, authorities)
+                .setExpiration(rtkValidity)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
+
 
         return UserTokenInfoDto.builder()
                 .accessToken(accessToken)

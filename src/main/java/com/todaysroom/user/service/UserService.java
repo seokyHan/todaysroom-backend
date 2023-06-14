@@ -78,6 +78,15 @@ public class UserService {
     }
 
     @Transactional
+    public ResponseEntity userLogout(String userEmail){
+
+        log.info("email 찍히나? {}", userEmail);
+
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @Transactional
     public ResponseEntity<UserTokenInfoDto> reissue(HttpServletRequest request) {
         String cookieRefreshToken = request.getHeader(AuthType.REISSUE_REFRESHTOKEN_HEADER.getByItem()).substring(13);
 

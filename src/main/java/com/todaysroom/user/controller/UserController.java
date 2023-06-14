@@ -32,6 +32,12 @@ public class UserController {
         return userService.userLogin(userLoginDto);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity logout(@RequestBody String userEmail) {
+
+        return userService.userLogout(userEmail);
+    }
+
     @PostMapping("/reissue")
     public ResponseEntity<UserTokenInfoDto> reissue(HttpServletRequest request){
 
