@@ -1,7 +1,12 @@
 package com.todaysroom.user.jwt;
 
+import com.todaysroom.exception.CustomException;
 import com.todaysroom.user.dto.UserTokenInfoDto;
+import com.todaysroom.user.redis.BlackList;
+import com.todaysroom.user.redis.BlackListRepository;
+import com.todaysroom.user.redis.RefreshToken;
 import com.todaysroom.user.types.AuthType;
+import com.todaysroom.user.types.ErrorCode;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -21,6 +26,7 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,14 +40,15 @@ public class TokenProvider implements InitializingBean {
     private final long tokenValidityInMilliseconds;
     private final long refreshTokenValidityInMilliseconds;
     private Key key;
-
+    private final BlackListRepository blackListRepository;
     public TokenProvider(@Value("${jwt.secret}")  String secret,
                          @Value("${jwt.token-validity-in-seconds}") long tokenValidityInMilliseconds,
-                         @Value("${jwt.refresh-token-validity-in-sec}") long refreshTokenValidityInMilliseconds
-                         ) {
+                         @Value("${jwt.refresh-token-validity-in-sec}") long refreshTokenValidityInMilliseconds,
+                         BlackListRepository blackListRepository) {
         this.secret = secret;
         this.tokenValidityInMilliseconds = tokenValidityInMilliseconds * 1000;
         this.refreshTokenValidityInMilliseconds = refreshTokenValidityInMilliseconds * 1000;
+        this.blackListRepository = blackListRepository;
     }
 
     // InitializingBean을 상속받고 afterPropertiesSet을 override한 이유는 빈이 생성되고
@@ -113,6 +120,18 @@ public class TokenProvider implements InitializingBean {
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 
+    public Long getExpiration(String token) {
+        Date expiration = Jwts
+                .parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getExpiration();
+
+        return expiration.getTime();
+    }
+
     // request header에서 토큰 정보 가져옴
     public String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
@@ -126,6 +145,11 @@ public class TokenProvider implements InitializingBean {
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+
+            if(blackListRepository.findByToken(token) != null){
+                return false;
+            }
+
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             log.error("잘못된 JWT 서명입니다.");

@@ -70,6 +70,7 @@ public class UserService {
                 .email(userTokenInfoDto.userEmail())
                 .token(userTokenInfoDto.refreshToken())
                 .authorities(authentication.getAuthorities())
+                .refreshTokenExpiration(tokenProvider.getExpiration(userTokenInfoDto.refreshToken()))
                 .build();
 
         refreshTokenRedisRepository.save(refreshToken);
@@ -78,12 +79,17 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity userLogout(String userEmail){
+    public ResponseEntity userLogout(){
 
-        log.info("email 찍히나? {}", userEmail);
+        log.info("email 찍히나? {}", SecurityContextHolder.getContext().getAuthentication().getName());
 
+        ResponseCookie cookie = ResponseCookie.from(AuthType.REFRESHTOKEN_KEY.getByItem(), null)
+                .maxAge(0)
+                .build();
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set(AuthType.REFRESHTOKEN_KEY.getByItem(), cookie.toString());
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(httpHeaders, HttpStatus.OK);
     }
 
     @Transactional
@@ -111,6 +117,7 @@ public class UserService {
                 .email(refreshTokenEntity.getEmail())
                 .token(tokenInfo.refreshToken())
                 .authorities(refreshTokenEntity.getAuthorities())
+                .refreshTokenExpiration(tokenProvider.getExpiration(tokenInfo.refreshToken()))
                 .build();
 
         refreshTokenRedisRepository.save(refreshToken);
