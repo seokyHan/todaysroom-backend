@@ -33,9 +33,9 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity logout() {
+    public ResponseEntity logout(@RequestBody UserTokenInfoDto userTokenInfoDto) {
 
-        return userService.userLogout();
+        return userService.userLogout(userTokenInfoDto);
     }
 
     @PostMapping("/reissue")

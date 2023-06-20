@@ -14,6 +14,7 @@ import java.util.Collection;
 @RedisHash(value = "RefreshToken")
 public class RefreshToken {
     @Id
+    @Indexed
     private String email;
     private Collection<? extends GrantedAuthority> authorities;
     @Indexed

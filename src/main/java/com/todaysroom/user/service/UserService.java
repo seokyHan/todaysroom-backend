@@ -8,6 +8,8 @@ import com.todaysroom.user.dto.UserTokenInfoDto;
 import com.todaysroom.user.entity.UserEntity;
 import com.todaysroom.user.jwt.JwtFilter;
 import com.todaysroom.user.jwt.TokenProvider;
+import com.todaysroom.user.redis.BlackList;
+import com.todaysroom.user.redis.BlackListRepository;
 import com.todaysroom.user.redis.RefreshToken;
 import com.todaysroom.user.redis.RefreshTokenRedisRepository;
 import com.todaysroom.user.repository.UserRepository;
@@ -31,8 +33,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -43,6 +47,7 @@ public class UserService {
     private final TokenProvider tokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final RefreshTokenRedisRepository refreshTokenRedisRepository;
+    private final BlackListRepository blackListRepository;
 
     @Transactional
     public ResponseEntity<UserTokenInfoDto> userLogin(UserLoginDto userLoginDto){
@@ -79,17 +84,35 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity userLogout(){
+    public ResponseEntity userLogout(UserTokenInfoDto userTokenInfoDto){
+        log.info(" email값 : {}", userTokenInfoDto.userEmail());
+        log.info(" token값 : {}", userTokenInfoDto.accessToken());
 
-        log.info("email 찍히나? {}", SecurityContextHolder.getContext().getAuthentication().getName());
+        if(refreshTokenRedisRepository.findByEmail(userTokenInfoDto.userEmail()) != null){
+            refreshTokenRedisRepository.deleteById(userTokenInfoDto.userEmail());
+        }
 
-        ResponseCookie cookie = ResponseCookie.from(AuthType.REFRESHTOKEN_KEY.getByItem(), null)
-                .maxAge(0)
+        log.info(" 삭제 완료 ");
+
+        Long now = new Date().getTime();
+        Long expiration = tokenProvider.getExpiration(userTokenInfoDto.accessToken());
+        log.info(" 현재시간 {}", now);
+        log.info(" 만료시간 {}", expiration);
+
+
+        log.info(" 남은 시간(초) {}", TimeUnit.SECONDS.toSeconds(expiration - now));
+        log.info(" 남은 시간(밀리세컨) {}", TimeUnit.SECONDS.toMillis(expiration - now));
+
+        BlackList blackList = BlackList.builder()
+                .token(userTokenInfoDto.accessToken())
+                .expirationInSeconds(expiration - now)
                 .build();
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(AuthType.REFRESHTOKEN_KEY.getByItem(), cookie.toString());
 
-        return new ResponseEntity<>(httpHeaders, HttpStatus.OK);
+        blackListRepository.save(blackList);
+
+        log.info(" blackList 저장 완료 ");
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Transactional

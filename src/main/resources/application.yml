@@ -28,7 +28,8 @@ jwt:
   header: Authorization
   secret: eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTY3OTU0OTIwNiwiaWF0IjoxNjc5NTQ5MjA2fQyZXQK1
 
-  token-validity-in-seconds: 1800
+#  token-validity-in-seconds: 1800
+  token-validity-in-seconds: 30
   refresh-token-validity-in-sec: 1209600
 
 logging:
