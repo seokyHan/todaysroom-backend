@@ -105,7 +105,7 @@ public class UserService {
 
         BlackList blackList = BlackList.builder()
                 .token(userTokenInfoDto.accessToken())
-                .expirationInSeconds(expiration - now)
+                .expirationInSeconds(TimeUnit.SECONDS.toSeconds(expiration - now))
                 .build();
 
         blackListRepository.save(blackList);
