@@ -2,9 +2,6 @@ package com.todaysroom.user.jwt;
 
 import com.todaysroom.exception.CustomException;
 import com.todaysroom.user.dto.UserTokenInfoDto;
-import com.todaysroom.user.redis.BlackList;
-import com.todaysroom.user.redis.BlackListRepository;
-import com.todaysroom.user.redis.RefreshToken;
 import com.todaysroom.user.types.AuthType;
 import com.todaysroom.user.types.ErrorCode;
 import io.jsonwebtoken.*;
@@ -14,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -39,16 +37,16 @@ public class TokenProvider implements InitializingBean {
     private final String secret;
     private final long tokenValidityInMilliseconds;
     private final long refreshTokenValidityInMilliseconds;
+    private final RedisTemplate redisTemplate;
     private Key key;
-    private final BlackListRepository blackListRepository;
     public TokenProvider(@Value("${jwt.secret}")  String secret,
                          @Value("${jwt.token-validity-in-seconds}") long tokenValidityInMilliseconds,
                          @Value("${jwt.refresh-token-validity-in-sec}") long refreshTokenValidityInMilliseconds,
-                         BlackListRepository blackListRepository) {
+                         RedisTemplate redisTemplate) {
         this.secret = secret;
         this.tokenValidityInMilliseconds = tokenValidityInMilliseconds * 1000;
         this.refreshTokenValidityInMilliseconds = refreshTokenValidityInMilliseconds * 1000;
-        this.blackListRepository = blackListRepository;
+        this.redisTemplate = redisTemplate;
     }
 
     // InitializingBean을 상속받고 afterPropertiesSet을 override한 이유는 빈이 생성되고
@@ -59,16 +57,10 @@ public class TokenProvider implements InitializingBean {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-
-    //Authentication 을 가지고 AccessToken, RefreshToken 을 생성하는 메서드
-    public UserTokenInfoDto generateToken(Authentication authentication) {
-        return generateToken(authentication.getName(), authentication.getAuthorities());
-    }
-
     //name, authorities 를 가지고 AccessToken, RefreshToken 을 생성하는 메서드
-    public UserTokenInfoDto generateToken(String name, Collection<? extends GrantedAuthority> inputAuthorities) {
+    public UserTokenInfoDto generateToken(Authentication authentication) {
         //권한 가져오기
-        String authorities = inputAuthorities.stream()
+        String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
@@ -82,7 +74,7 @@ public class TokenProvider implements InitializingBean {
 
         //Generate AccessToken
         String accessToken = Jwts.builder()
-                .setSubject(name)
+                .setSubject(authentication.getName())
                 .claim(AUTHORITIES_KEY, authorities)
                 .setExpiration(validity)  //토큰 만료 시간 설정
                 .signWith(key, SignatureAlgorithm.HS512)
@@ -91,7 +83,7 @@ public class TokenProvider implements InitializingBean {
 
         //Generate RefreshToken
         String refreshToken = Jwts.builder()
-                .setSubject(name)
+                .setSubject(authentication.getName())
                 .claim(AUTHORITIES_KEY, authorities)
                 .setExpiration(rtkValidity)
                 .signWith(key, SignatureAlgorithm.HS512)
@@ -149,7 +141,7 @@ public class TokenProvider implements InitializingBean {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 
-            if(blackListRepository.findByToken(token) != null){
+            if(redisTemplate.opsForValue().get(token) != null){
                 return false;
             }
 

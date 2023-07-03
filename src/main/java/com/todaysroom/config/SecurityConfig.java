@@ -4,7 +4,6 @@ import com.todaysroom.user.jwt.JwtAccessDeniedHandler;
 import com.todaysroom.user.jwt.JwtAuthenticationEntryPoint;
 import com.todaysroom.user.jwt.JwtSecurityConfig;
 import com.todaysroom.user.jwt.TokenProvider;
-import com.todaysroom.user.redis.BlackListRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,7 +34,6 @@ public class SecurityConfig{
     private final TokenProvider tokenProvider;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
-    private final BlackListRepository blackListRepository;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
