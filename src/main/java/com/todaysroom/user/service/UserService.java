@@ -3,9 +3,14 @@ package com.todaysroom.user.service;
 
 import com.todaysroom.exception.CustomException;
 import com.todaysroom.user.dto.UserLoginDto;
+import com.todaysroom.user.dto.UserSignupDto;
 import com.todaysroom.user.dto.UserTokenInfoDto;
+import com.todaysroom.user.encoder.BCryptPasswordEncoder;
+import com.todaysroom.user.entity.Authority;
+import com.todaysroom.user.entity.UserAuthority;
 import com.todaysroom.user.entity.UserEntity;
 import com.todaysroom.user.jwt.TokenProvider;
+import com.todaysroom.user.repository.AuthorityRepository;
 import com.todaysroom.user.repository.UserRepository;
 import com.todaysroom.user.types.AuthType;
 import com.todaysroom.user.types.ErrorCode;
@@ -35,9 +40,11 @@ import java.util.concurrent.TimeUnit;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final AuthorityRepository authorityRepository;
     private final TokenProvider tokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final RedisTemplate redisTemplate;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Transactional
     public ResponseEntity<UserTokenInfoDto> userLogin(UserLoginDto userLoginDto){
@@ -137,6 +144,29 @@ public class UserService {
         return setResponseData(userTokenInfoDto);
     }
 
+    @Transactional
+    public ResponseEntity signup(UserSignupDto userSignupDto) throws Exception {
+        if(!validateDuplicatedEmail(userSignupDto.userEmail())){
+            throw new CustomException(ErrorCode.DUPLICATED_USER_EMAIL);
+        }
+        UserEntity signupUser = userSignupDto.toUserEntity();
+        UserEntity userEntity = UserEntity.builder()
+                .userEmail(signupUser.getUserEmail())
+                .password(passwordEncoder.encrypt(signupUser.getPassword()))
+                .userName(signupUser.getUserName())
+                .nickname(signupUser.getNickname())
+                .build();
+
+        Authority authority = authorityRepository.findById(2L).orElseThrow(Exception::new);
+        UserAuthority userAuthority = UserAuthority.builder()
+                        .userEntity(userEntity)
+                        .auth(authority)
+                        .build();
+        userRepository.save(userEntity);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     public ResponseEntity refreshTokenTest (HttpServletRequest request){
         String cookie = request.getHeader(AuthType.REISSUE_HEADER.getByItem());
 
@@ -157,6 +187,13 @@ public class UserService {
         }
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private boolean validateDuplicatedEmail (String userEmail){
+        if(userRepository.existsByUserEmail(userEmail)){
+            return false;
+        }
+        return true;
     }
 
     private ResponseEntity<UserTokenInfoDto> setResponseData(UserTokenInfoDto userTokenInfoDto) {

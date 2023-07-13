@@ -1,12 +1,13 @@
 package com.todaysroom.user.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @Getter
@@ -44,15 +45,13 @@ public class UserEntity {
     @Column(name = "activated")
     private boolean activated;
 
-    @ManyToMany
-    @JoinTable(
-            name = "user_authority",
-            joinColumns = {@JoinColumn(name = "id", referencedColumnName = "id")},
-            inverseJoinColumns = {@JoinColumn(name = "authority_name", referencedColumnName = "authority_name")})
-    private Set<Authority> authorities;
+    @OneToMany(cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JsonManagedReference(value = "user-userAuthority")
+    private List<UserAuthority> authorities;
 
     @Builder
-    public UserEntity(Long id, String userEmail, String password, String userName, String nickname) {
+    public UserEntity(Long id, String userEmail, String password, String userName, String nickname, List<UserAuthority> authorities) {
         this.id = id;
         this.userEmail = userEmail;
         this.password = password;
