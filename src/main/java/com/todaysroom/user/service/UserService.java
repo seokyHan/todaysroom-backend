@@ -11,6 +11,7 @@ import com.todaysroom.user.entity.UserAuthority;
 import com.todaysroom.user.entity.UserEntity;
 import com.todaysroom.user.jwt.TokenProvider;
 import com.todaysroom.user.repository.AuthorityRepository;
+import com.todaysroom.user.repository.UserAuthorityRepository;
 import com.todaysroom.user.repository.UserRepository;
 import com.todaysroom.user.types.AuthType;
 import com.todaysroom.user.types.ErrorCode;
@@ -41,6 +42,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final AuthorityRepository authorityRepository;
+    private final UserAuthorityRepository userAuthorityRepository;
     private final TokenProvider tokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final RedisTemplate redisTemplate;
@@ -162,6 +164,7 @@ public class UserService {
                         .userEntity(userEntity)
                         .auth(authority)
                         .build();
+        userAuthorityRepository.save(userAuthority);
         userRepository.save(userEntity);
 
         return new ResponseEntity<>(HttpStatus.OK);
