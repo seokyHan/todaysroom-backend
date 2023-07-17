@@ -5,7 +5,6 @@ import com.todaysroom.exception.CustomException;
 import com.todaysroom.user.dto.UserLoginDto;
 import com.todaysroom.user.dto.UserSignupDto;
 import com.todaysroom.user.dto.UserTokenInfoDto;
-import com.todaysroom.user.encoder.BCryptPasswordEncoder;
 import com.todaysroom.user.entity.Authority;
 import com.todaysroom.user.entity.UserAuthority;
 import com.todaysroom.user.entity.UserEntity;
@@ -27,6 +26,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
@@ -46,7 +46,7 @@ public class UserService {
     private final TokenProvider tokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final RedisTemplate redisTemplate;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public ResponseEntity<UserTokenInfoDto> userLogin(UserLoginDto userLoginDto){
@@ -151,10 +151,13 @@ public class UserService {
         if(!validateDuplicatedEmail(userSignupDto.userEmail())){
             throw new CustomException(ErrorCode.DUPLICATED_USER_EMAIL);
         }
+
         UserEntity signupUser = userSignupDto.toUserEntity();
+
         UserEntity userEntity = UserEntity.builder()
+                .activated(true)
                 .userEmail(signupUser.getUserEmail())
-                .password(passwordEncoder.encrypt(signupUser.getPassword()))
+                .password(passwordEncoder.encode(signupUser.getPassword()))
                 .userName(signupUser.getUserName())
                 .nickname(signupUser.getNickname())
                 .build();
@@ -168,6 +171,13 @@ public class UserService {
         userRepository.save(userEntity);
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    public boolean validateDuplicatedEmail (String userEmail){
+        if(userRepository.existsByUserEmail(userEmail)){
+            return false;
+        }
+        return true;
     }
 
     public ResponseEntity refreshTokenTest (HttpServletRequest request){
@@ -190,13 +200,6 @@ public class UserService {
         }
 
         return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    private boolean validateDuplicatedEmail (String userEmail){
-        if(userRepository.existsByUserEmail(userEmail)){
-            return false;
-        }
-        return true;
     }
 
     private ResponseEntity<UserTokenInfoDto> setResponseData(UserTokenInfoDto userTokenInfoDto) {

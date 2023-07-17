@@ -3,7 +3,6 @@ package com.todaysroom.user.dto;
 import com.todaysroom.user.entity.UserEntity;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Builder;
 import org.hibernate.validator.constraints.Length;
 
 public record UserSignupDto(@NotBlank(message = "이메일을 입력하세요.")

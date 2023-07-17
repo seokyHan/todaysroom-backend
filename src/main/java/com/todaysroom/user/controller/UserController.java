@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
@@ -42,9 +43,15 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity signup(UserSignupDto userSignupDto) throws Exception {
+    public ResponseEntity signup(@Valid @RequestBody UserSignupDto userSignupDto) throws Exception {
 
         return userService.signup(userSignupDto);
+    }
+
+    @GetMapping("/email-check")
+    public ResponseEntity<Boolean> isDuplicateEmail(@RequestParam("userEmail") String userEmail){
+
+        return new ResponseEntity(userService.validateDuplicatedEmail(userEmail), HttpStatus.OK);
     }
 
     @PostMapping("/test")

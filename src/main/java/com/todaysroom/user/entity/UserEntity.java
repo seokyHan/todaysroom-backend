@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.validator.constraints.Length;
 
 import java.util.List;
@@ -13,6 +15,8 @@ import java.util.List;
 @Getter
 @Table(name = "userEntity")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+// insert시 null인 필드 제외
+// @DynamicInsert
 public class UserEntity {
 
     @Id
@@ -51,8 +55,8 @@ public class UserEntity {
     private List<UserAuthority> authorities;
 
     @Builder
-    public UserEntity(Long id, String userEmail, String password, String userName, String nickname, List<UserAuthority> authorities) {
-        this.id = id;
+    public UserEntity(boolean activated, String userEmail, String password, String userName, String nickname, List<UserAuthority> authorities) {
+        this.activated = activated;
         this.userEmail = userEmail;
         this.password = password;
         this.userName = userName;
