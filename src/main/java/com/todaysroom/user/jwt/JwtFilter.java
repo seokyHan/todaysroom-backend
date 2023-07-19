@@ -2,7 +2,7 @@ package com.todaysroom.user.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.todaysroom.user.dto.ResponseDto;
-import com.todaysroom.user.types.ErrorCode;
+import com.todaysroom.types.ErrorCode;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

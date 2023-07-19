@@ -12,8 +12,8 @@ import com.todaysroom.user.jwt.TokenProvider;
 import com.todaysroom.user.repository.AuthorityRepository;
 import com.todaysroom.user.repository.UserAuthorityRepository;
 import com.todaysroom.user.repository.UserRepository;
-import com.todaysroom.user.types.AuthType;
-import com.todaysroom.user.types.ErrorCode;
+import com.todaysroom.types.AuthType;
+import com.todaysroom.types.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,9 +30,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Date;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -75,6 +79,19 @@ public class UserService {
                         userTokenInfoDto.refreshToken(),
                         tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
                         TimeUnit.MILLISECONDS);
+
+        Optional<UserEntity> optionalUserEntity = userRepository.findOneWithAuthoritiesByUserEmail(userLoginDto.userEmail());
+        List<UserAuthority> authorities = optionalUserEntity.get().getAuthorities();
+        String temp = "";
+
+        for (UserAuthority authority : authorities) {
+            if(String.valueOf(authorityRepository.findById(authority.getId())).contains("ROLE_USER")){
+                temp = String.valueOf(authorityRepository.findById(authority.getId()));
+            }
+        }
+
+        log.info("무슨 값 담김 1? : {}", temp);
+
 
         return setResponseData(userTokenInfoDto);
     }
@@ -215,7 +232,7 @@ public class UserService {
 
         return new ResponseEntity<>(userTokenInfoDto, httpHeaders, HttpStatus.OK);
     }
-    private HttpHeaders addHttpHeaders(String accessToken, String refreshToken){
+    public HttpHeaders addHttpHeaders(String accessToken, String refreshToken){
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(TokenProvider.AUTHORIZATION_HEADER, accessToken);
         httpHeaders.add(TokenProvider.REFRESHTOKEN_HEADER, refreshToken);

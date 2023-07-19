@@ -1,9 +1,7 @@
 package com.todaysroom.user.jwt;
 
-import com.todaysroom.exception.CustomException;
 import com.todaysroom.user.dto.UserTokenInfoDto;
-import com.todaysroom.user.types.AuthType;
-import com.todaysroom.user.types.ErrorCode;
+import com.todaysroom.types.AuthType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -24,7 +22,6 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -55,6 +52,29 @@ public class TokenProvider implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         byte[] keyBytes = Decoders.BASE64.decode(secret);
         this.key = Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public String oAuth2CreateAccessToken(String email) {
+        long now = (new Date()).getTime();
+        Date validity = new Date(now + tokenValidityInMilliseconds);
+
+        return Jwts.builder()
+                .setSubject("AccessToken")
+                .claim("email", email)
+                .setExpiration(validity)  //토큰 만료 시간 설정
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
+    }
+
+    public String oAuth2CreateRefreshToken() {
+        long now = (new Date()).getTime();
+        Date rtkValidity = new Date(now + refreshTokenValidityInMilliseconds);
+
+        return Jwts.builder()
+                .setSubject("RefreshToken")
+                .setExpiration(rtkValidity)
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
     }
 
     //name, authorities 를 가지고 AccessToken, RefreshToken 을 생성하는 메서드

@@ -1,6 +1,8 @@
 package com.todaysroom.user.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.todaysroom.types.Role;
+import com.todaysroom.types.SocialType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -54,13 +56,35 @@ public class UserEntity {
     @JsonManagedReference(value = "user-userAuthority")
     private List<UserAuthority> authorities;
 
+    //OAuth2
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    @Enumerated(EnumType.STRING)
+    private SocialType socialType; // KAKAO, NAVER, GOOGLE
+
+    private String socialId; // 로그인한 소셜 타입의 식별자 값 (일반 로그인인 경우 null)
+    private String imageUrl; // 프로필 이미지
+
     @Builder
-    public UserEntity(boolean activated, String userEmail, String password, String userName, String nickname, List<UserAuthority> authorities) {
+    public UserEntity(boolean activated,
+                      String userEmail,
+                      String password,
+                      String userName,
+                      String nickname,
+                      List<UserAuthority> authorities,
+                      String imageUrl,
+                      SocialType socialType,
+                      String socialId) {
         this.activated = activated;
         this.userEmail = userEmail;
         this.password = password;
         this.userName = userName;
         this.nickname = nickname;
+        this.imageUrl = imageUrl;
+        this.socialType = socialType;
+        this.socialId = socialId;
+        this.authorities = authorities;
     }
 }
 

@@ -1,6 +1,6 @@
 package com.todaysroom.exception;
 
-import com.todaysroom.user.types.ErrorCode;
+import com.todaysroom.types.ErrorCode;
 
 public class CustomException extends RuntimeException{
     private ErrorCode error;
