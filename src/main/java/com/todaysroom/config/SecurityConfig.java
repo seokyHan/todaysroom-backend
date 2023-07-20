@@ -1,5 +1,8 @@
 package com.todaysroom.config;
 
+import com.todaysroom.oauth2.handler.OAuth2LoginFailureHandler;
+import com.todaysroom.oauth2.handler.OAuth2LoginSuccessHandler;
+import com.todaysroom.oauth2.service.CustomOAuth2UserService;
 import com.todaysroom.user.jwt.JwtAccessDeniedHandler;
 import com.todaysroom.user.jwt.JwtAuthenticationEntryPoint;
 import com.todaysroom.user.jwt.JwtSecurityConfig;
@@ -29,6 +32,9 @@ public class SecurityConfig{
     private final TokenProvider tokenProvider;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -53,7 +59,9 @@ public class SecurityConfig{
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors().configurationSource(corsConfigurationSource()).and()
+        http.formLogin().disable()
+                .httpBasic().disable()
+                .cors().configurationSource(corsConfigurationSource()).and()
                 .csrf().disable()
                 .exceptionHandling()
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
@@ -78,7 +86,13 @@ public class SecurityConfig{
 
                 .anyRequest().authenticated()
                 .and()
-                .apply(new JwtSecurityConfig(tokenProvider));
+                .apply(new JwtSecurityConfig(tokenProvider))
+                .and()
+                //== 소셜 로그인 설정 ==//
+                .oauth2Login()
+                .successHandler(oAuth2LoginSuccessHandler) // 동의하고 계속하기를 눌렀을 때 Handler 설정
+                .failureHandler(oAuth2LoginFailureHandler) // 소셜 로그인 실패 시 핸들러 설정
+                .userInfoEndpoint().userService(customOAuth2UserService); // customUserService 설정
 
         return http.build();
     }
@@ -87,6 +101,6 @@ public class SecurityConfig{
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer(){
-        return (web) -> web.ignoring().requestMatchers("/h2-console/**","/favicon.ico");
+        return (web) -> web.ignoring().requestMatchers("/","/h2-console/**","/favicon.ico");
     }
 }

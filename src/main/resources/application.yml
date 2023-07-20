@@ -34,7 +34,7 @@ spring:
           naver:
             client-id: m5MPaucVkK2JSlpUuXKn
             client-secret: RRB0gWdtcS
-            redirect-uri: http://localhost:9000/login/oauth2/naver
+            redirect-uri: http://localhost:9000/login/ouath2/code/naver
             authorization-grant-type: authorization_code
             scope: name, email, profile_image
             client-name: Naver
@@ -42,7 +42,7 @@ spring:
           kakao:
             client-id: 6f3ec3c70b15ed635ba3c7f0cc46ae82
             client-secret: frpoE0zEcu33Tj7o4Jrt3LdZFjF3jz01
-            redirect-uri: http://localhost:9000/login/oauth2/kakao
+            redirect-uri: http://localhost:9000/login/oauth2/code/kakao
             client-authentication-method: POST
             authorization-grant-type: authorization_code
             scope: profile_nickname, profile_image

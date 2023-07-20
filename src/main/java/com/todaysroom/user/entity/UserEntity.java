@@ -26,16 +26,13 @@ public class UserEntity {
     @Column(name = "id")
     private Long id;
 
-    @NotBlank(message = "이메일을 입력하세요.")
     @Email(message = "이메일 형식에 맞지 않습니다.")
     @Column(name = "userEmail")
     private String userEmail;
 
-    @NotBlank(message = "비밀번호를 입력하세요.")
     @Column(name = "password")
     private String password;
 
-    @NotBlank(message = "이름을 입력하세요.")
     @Length(min = 2, max = 8, message = "2~10자리의 이름을 입력하세요.")
     @Column(name = "userName")
     private String userName;

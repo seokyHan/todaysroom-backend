@@ -39,26 +39,39 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         log.info("OAuth2 Login 성공!");
+
         try{
             CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
-
             Optional<UserEntity> optionalUserEntity = userRepository.findOneWithAuthoritiesByUserEmail(oAuth2User.getEmail());
-            List<UserAuthority> authorities = optionalUserEntity.get().getAuthorities();
             String temp = "";
 
-            for (UserAuthority authority : authorities) {
-                if(String.valueOf(authorityRepository.findById(authority.getId())).contains("ROLE_GUEST")){
-                    temp = String.valueOf(authorityRepository.findById(authority.getId()));
+            if (optionalUserEntity.isPresent()) {
+                UserEntity entity = optionalUserEntity.get();
+                boolean hasUserRole = entity.getAuthorities()
+                        .stream()
+                        .anyMatch(authority -> Role.GUEST.getKey().equals(authority.getAuth().getAuthorityName()));
+
+                // 로그인 User의 권한이 USER_GUEST인 경우
+                if (hasUserRole) {
+                    String accessToken = tokenProvider.oAuth2CreateAccessToken(oAuth2User.getEmail());
+                    response.addHeader(TokenProvider.AUTHORIZATION_HEADER, accessToken);
+                    response.sendRedirect("oauth2/sign-up"); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
+
+                    response.setHeader(TokenProvider.AUTHORIZATION_HEADER,  accessToken);
+                    response.setStatus(HttpServletResponse.SC_OK);
+
+                    /**
+                     * 주석 처리한 부분 - Role을 GUEST -> USER로 업데이트하는 로직.
+                     * 이후에 회원가입 추가 폼 입력 시 업데이트하는 컨트롤러, 서비스를 만들면
+                     * 그 시점에 Role Update를 진행
+                     */
+    //                User findUser = userRepository.findByEmail(oAuth2User.getEmail())
+    //                                .orElseThrow(() -> new IllegalArgumentException("이메일에 해당하는 유저가 없습니다."));
+    //                findUser.authorizeUser();
+                }else {
+                    loginSuccess(response, oAuth2User); // 로그인에 성공한 경우 access, refresh 토큰 생성
                 }
             }
-
-
-            // User의 Role이 GUEST일 경우 처음 요청한 회원이므로 회원가입 페이지로 리다이렉트
-//            if(oAuth2User.getRole() == Role.GUEST) {
-//                String accessToken = tokenProvider.oAuth2CreateAccessToken(oAuth2User.getEmail());
-//                response.addHeader(jwtService.getAccessHeader(), "Bearer " + accessToken);
-//                response.sendRedirect("oauth2/sign-up"); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
-
 
         } catch (Exception e){
             log.info("error : {}", e.getMessage());
@@ -90,9 +103,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                         refreshToken,
                         tokenProvider.getExpiration(refreshToken),
                         TimeUnit.MILLISECONDS);
-
     }
-
 
 
 }

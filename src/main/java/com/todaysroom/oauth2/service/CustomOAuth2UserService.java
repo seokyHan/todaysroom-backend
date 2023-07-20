@@ -22,7 +22,9 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -52,25 +54,35 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         /**
          * userRequest에서 registrationId 추출 후 registrationId으로 SocialType 저장
-         * http://localhost:8080/oauth2/authorization/kakao에서 kakao가 registrationId
+         * http://localhost:9000/oauth2/authorization/kakao에서 kakao가 registrationId
          * userNameAttributeName은 이후에 nameAttributeKey로 설정된다.
          */
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
+        log.info("registrationId : {}", registrationId);
         SocialType socialType = getSocialType(registrationId);
+        log.info("socialType : {}", socialType);
         String userNameAttributeName = userRequest.getClientRegistration()
                 .getProviderDetails()
                 .getUserInfoEndpoint()
                 .getUserNameAttributeName(); // OAuth2 로그인 시 키(PK)가 되는 값
+        log.info("userNameAttributeName : {}", userNameAttributeName);
         Map<String, Object> attributes = oAuth2User.getAttributes(); // 소셜 로그인에서 API가 제공하는 userInfo의 Json 값(유저 정보들)
+
+        log.info("attributes : {}         ,            {}", oAuth2User.getAttributes(), oAuth2User.getName());
 
         // socialType에 따라 유저 정보를 통해 OAuthAttributes 객체 생성
         OAuthAttributes extractAttributes = OAuthAttributes.of(socialType, userNameAttributeName, attributes);
 
         UserEntity createdUser = getUser(extractAttributes, socialType); // getUser() 메소드로 User 객체 생성 후 반환
 
+        //log.info("------------------------authority : {}", auth);
+
+        // ToDo User의 Authority 값 가져온 후 대입
+        // initialize proxy 지연로딩 프록시 dto 리팩토링
+
         // DefaultOAuth2User를 구현한 CustomOAuth2User 객체를 생성해서 반환
         return new CustomOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority(createdUser.getRole().getKey())),
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_GUEST")),
                 attributes,
                 extractAttributes.getNameAttributeKey(),
                 createdUser.getUserEmail()
@@ -113,10 +125,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             throw new CustomException(ErrorCode.NOT_EXISTS_AUTHORITY);
         }
         UserEntity createdUser = attributes.toUserEntity(socialType, attributes.getOAuth2UserInfo());
-        UserAuthority createdUserAuthority = attributes.toUserAuthorityEntity(createdUser, authority);
+        createdUser = userRepository.save(createdUser); // Save the UserEntity first
 
+        UserAuthority createdUserAuthority = attributes.toUserAuthorityEntity(createdUser, authority);
         userAuthorityRepository.save(createdUserAuthority);
 
-        return userRepository.save(createdUser);
+        return createdUser;
     }
 }

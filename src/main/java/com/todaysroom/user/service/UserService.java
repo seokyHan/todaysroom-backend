@@ -2,6 +2,7 @@ package com.todaysroom.user.service;
 
 
 import com.todaysroom.exception.CustomException;
+import com.todaysroom.oauth2.CustomOAuth2User;
 import com.todaysroom.user.dto.UserLoginDto;
 import com.todaysroom.user.dto.UserSignupDto;
 import com.todaysroom.user.dto.UserTokenInfoDto;
@@ -80,17 +81,8 @@ public class UserService {
                         tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
                         TimeUnit.MILLISECONDS);
 
-        Optional<UserEntity> optionalUserEntity = userRepository.findOneWithAuthoritiesByUserEmail(userLoginDto.userEmail());
-        List<UserAuthority> authorities = optionalUserEntity.get().getAuthorities();
-        String temp = "";
 
-        for (UserAuthority authority : authorities) {
-            if(String.valueOf(authorityRepository.findById(authority.getId())).contains("ROLE_USER")){
-                temp = String.valueOf(authorityRepository.findById(authority.getId()));
-            }
-        }
 
-        log.info("무슨 값 담김 1? : {}", temp);
 
 
         return setResponseData(userTokenInfoDto);
