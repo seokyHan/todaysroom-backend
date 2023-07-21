@@ -37,7 +37,6 @@ public class UserEntity {
     @Column(name = "userName")
     private String userName;
 
-    @NotBlank(message = "닉네임을 입력하세요.")
     @Length(min = 2, max = 8, message = "2~10자리의 닉네임을 입력하세요.")
     @Column(name = "nickname")
     private String nickname;
@@ -72,7 +71,8 @@ public class UserEntity {
                       List<UserAuthority> authorities,
                       String imageUrl,
                       SocialType socialType,
-                      String socialId) {
+                      String socialId,
+                      Role role) {
         this.activated = activated;
         this.userEmail = userEmail;
         this.password = password;
@@ -81,6 +81,7 @@ public class UserEntity {
         this.imageUrl = imageUrl;
         this.socialType = socialType;
         this.socialId = socialId;
+        this.role = role;
         this.authorities = authorities;
     }
 }

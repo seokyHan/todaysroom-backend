@@ -1,5 +1,6 @@
 package com.todaysroom.oauth2.userInfo;
 
+
 import java.util.Map;
 
 public class NaverOAuth2UserInfo extends OAuth2UserInfo{
@@ -25,7 +26,7 @@ public class NaverOAuth2UserInfo extends OAuth2UserInfo{
             return null;
         }
 
-        return (String) response.get("nickname");
+        return (String) response.get("name");
     }
 
     @Override

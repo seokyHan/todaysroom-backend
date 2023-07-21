@@ -17,7 +17,7 @@ public class CustomOAuth2User extends DefaultOAuth2User {
 
     // OAuth 로그인 시 위의 추가 정보(사는 도시, 나이 등)을 입력했는지 (처음 OAuth 로그인인지)를 판단하기 위함
     // 첫 로그인시 ROLE_GUEST, 추가 정보 입력 후 회원가입 진행시 ROLE_USER
-    //private Role role;
+    private Role role;
 
     /**
      * Constructs a {@code DefaultOAuth2User} using the provided parameters.
@@ -30,12 +30,12 @@ public class CustomOAuth2User extends DefaultOAuth2User {
     public CustomOAuth2User(Collection<? extends GrantedAuthority> authorities,
                             Map<String, Object> attributes,
                             String nameAttributeKey,
-                            String email
-                            //Role role
+                            String email,
+                            Role role
     ) {
         super(authorities, attributes, nameAttributeKey);
         this.email = email;
-        //this.role = role;
+        this.role = role;
 
     }
 }

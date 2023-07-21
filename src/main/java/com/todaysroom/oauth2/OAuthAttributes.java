@@ -11,6 +11,7 @@ import com.todaysroom.user.entity.UserAuthority;
 import com.todaysroom.user.entity.UserEntity;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.UUID;
@@ -81,11 +82,13 @@ public class OAuthAttributes {
      */
     public UserEntity toUserEntity(SocialType socialType, OAuth2UserInfo oauth2UserInfo) {
         return UserEntity.builder()
+                .activated(true)
                 .socialType(socialType)
                 .socialId(oauth2UserInfo.getId())
                 .userEmail(UUID.randomUUID() + "@socialUser.com")
-                .nickname(oauth2UserInfo.getNickname())
+                .userName(oauth2UserInfo.getNickname())
                 .imageUrl(oauth2UserInfo.getImageUrl())
+                .role(Role.GUEST)
                 .build();
     }
 
