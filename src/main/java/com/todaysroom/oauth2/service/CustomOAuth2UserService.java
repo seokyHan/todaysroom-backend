@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -43,8 +44,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        log.info("CustomOAuth2UserService.loadUser() 실행 - OAuth2 로그인 요청 진입");
-
         /**
          * DefaultOAuth2UserService 객체를 생성하여, loadUser(userRequest)를 통해 DefaultOAuth2User 객체를 생성 후 반환
          * DefaultOAuth2UserService의 loadUser()는 소셜 로그인 API의 사용자 정보 제공 URI로 요청을 보내서
@@ -66,12 +65,12 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 .getUserInfoEndpoint()
                 .getUserNameAttributeName(); // OAuth2 로그인 시 키(PK)가 되는 값
         Map<String, Object> attributes = oAuth2User.getAttributes(); // 소셜 로그인에서 API가 제공하는 userInfo의 Json 값(유저 정보들)
-        log.info("------------attributes : {}", attributes);
+        log.info("attributes : {}", attributes);
 
         // socialType에 따라 유저 정보를 통해 OAuthAttributes 객체 생성
         OAuthAttributes extractAttributes = OAuthAttributes.of(socialType, userNameAttributeName, attributes);
 
-        UserEntity createdUser = getUser(extractAttributes, socialType); // getUser() 메소드로 User 객체 생성 후 반환
+        UserEntity createdUser = getUserOrCreateUser(extractAttributes, socialType); // getUser() 메소드로 User 객체 생성 후 반환
 
 
         return new CustomOAuth2User(
@@ -95,36 +94,54 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     /**
      * SocialType과 attributes에 들어있는 소셜 로그인의 식별값 id를 통해 회원을 찾아 반환하는 메소드
-     * 만약 찾은 회원이 있다면, 그대로 반환하고 없다면 saveUser()를 호출하여 회원을 저장한다.
-     */
-    private UserEntity getUser(OAuthAttributes attributes, SocialType socialType) {
-        UserEntity findUser = userRepository.findBySocialTypeAndSocialId(socialType,
-                attributes.getOAuth2UserInfo().getId()).orElse(null);
-
-        if(findUser == null) {
-            return saveUser(attributes, socialType);
-        }
-        return findUser;
-    }
-
-    /**
      * OAuthAttributes의 toEntity() 메소드를 통해 빌더로 User 객체 생성 후 반환
      * 생성된 User 객체를 DB에 저장 : socialType, socialId, email, role 값만 있는 상태
      */
-    private UserEntity saveUser(OAuthAttributes attributes, SocialType socialType) {
-        Authority authority = null;
-        try {
-            authority = authorityRepository.findById(3L).orElseThrow(Exception::new);
-        } catch (Exception e) {
-            throw new CustomException(ErrorCode.NOT_EXISTS_AUTHORITY);
+    @Transactional
+    public UserEntity getUserOrCreateUser(OAuthAttributes attributes, SocialType socialType) {
+        Authority authority = authorityRepository.findById(3L)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXISTS_AUTHORITY));
+
+        UserEntity findUser = userRepository.findBySocialTypeAndSocialId(socialType,
+                attributes.getOAuth2UserInfo().getId()).orElse(null);
+
+        if (findUser == null) {
+            UserEntity newUser = attributes.toUserEntity(socialType, attributes.getOAuth2UserInfo());
+            userRepository.save(newUser);
+
+            UserAuthority newUserAuthority = attributes.toUserAuthorityEntity(newUser, authority);
+            userAuthorityRepository.save(newUserAuthority);;
+
+            return newUser;
         }
-        log.info("------------attributes.getOAuth2UserInfo() : {}", attributes.getOAuth2UserInfo());
-        UserEntity createdUser = attributes.toUserEntity(socialType, attributes.getOAuth2UserInfo());
-        createdUser = userRepository.save(createdUser); // Save the UserEntity first
 
-        UserAuthority createdUserAuthority = attributes.toUserAuthorityEntity(createdUser, authority);
-        userAuthorityRepository.save(createdUserAuthority);
-
-        return createdUser;
+        return findUser;
     }
+
+//    private UserEntity getUser(OAuthAttributes attributes, SocialType socialType) {
+//        UserEntity findUser = userRepository.findBySocialTypeAndSocialId(socialType,
+//                attributes.getOAuth2UserInfo().getId()).orElse(null);
+//
+//        if(findUser == null) {
+//            return saveUser(attributes, socialType);
+//        }
+//        return findUser;
+//    }
+
+//    private UserEntity saveUser(OAuthAttributes attributes, SocialType socialType) {
+//        Authority authority = null;
+//        try {
+//            authority = authorityRepository.findById(3L).orElseThrow(Exception::new);
+//        } catch (Exception e) {
+//            throw new CustomException(ErrorCode.NOT_EXISTS_AUTHORITY);
+//        }
+//
+//        UserEntity createdUser = attributes.toUserEntity(socialType, attributes.getOAuth2UserInfo());
+//        createdUser = userRepository.save(createdUser); // Save the UserEntity first
+//
+//        UserAuthority createdUserAuthority = attributes.toUserAuthorityEntity(createdUser, authority);
+//        userAuthorityRepository.save(createdUserAuthority);
+//
+//        return createdUser;
+//    }
 }

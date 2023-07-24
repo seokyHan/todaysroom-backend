@@ -3,11 +3,7 @@ package com.todaysroom.oauth2.handler;
 import com.todaysroom.oauth2.CustomOAuth2User;
 import com.todaysroom.types.AuthType;
 import com.todaysroom.types.Role;
-import com.todaysroom.user.entity.UserAuthority;
-import com.todaysroom.user.entity.UserEntity;
 import com.todaysroom.user.jwt.TokenProvider;
-import com.todaysroom.user.repository.AuthorityRepository;
-import com.todaysroom.user.repository.UserRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,9 +17,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -33,8 +26,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final TokenProvider tokenProvider;
     private final RedisTemplate redisTemplate;
-    private final UserRepository userRepository;
-    private final AuthorityRepository authorityRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -48,10 +39,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 log.info("oAuth2User : {}",oAuth2User.getEmail());
                 String accessToken = tokenProvider.oAuth2CreateAccessToken(oAuth2User.getEmail());
                 response.addHeader(TokenProvider.AUTHORIZATION_HEADER, accessToken);
-                response.sendRedirect("http://localhost:8080"); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
-
-                response.setHeader(TokenProvider.AUTHORIZATION_HEADER,  accessToken);
-                response.setStatus(HttpServletResponse.SC_OK);
+                response.sendRedirect("http://localhost:8080/signup?oauth_success=true"); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
 
                 /**
                  * 주석 처리한 부분 - Role을 GUEST -> USER로 업데이트하는 로직.
