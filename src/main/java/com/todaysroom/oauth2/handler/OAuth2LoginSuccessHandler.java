@@ -4,7 +4,9 @@ import com.todaysroom.oauth2.CustomOAuth2User;
 import com.todaysroom.types.AuthType;
 import com.todaysroom.types.Role;
 import com.todaysroom.user.jwt.TokenProvider;
+import com.todaysroom.user.repository.UserRepository;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +17,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -25,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final TokenProvider tokenProvider;
+    private final UserRepository userRepository;
     private final RedisTemplate redisTemplate;
 
     @Override
@@ -38,8 +43,13 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             if (oAuth2User.getRole() == Role.GUEST) {
                 log.info("oAuth2User : {}",oAuth2User.getEmail());
                 String accessToken = tokenProvider.oAuth2CreateAccessToken(oAuth2User.getEmail());
+                Cookie cookie = new Cookie(TokenProvider.AUTHORIZATION_HEADER, accessToken);
+                cookie.setMaxAge(36000);
+                cookie.setPath("/");
                 response.addHeader(TokenProvider.AUTHORIZATION_HEADER, accessToken);
-                response.sendRedirect("http://localhost:8080/signup?oauth_success=true"); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
+
+                response.addCookie(cookie);
+                response.sendRedirect("http://localhost:8080/signup?oauth=success"); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
 
                 /**
                  * 주석 처리한 부분 - Role을 GUEST -> USER로 업데이트하는 로직.
@@ -63,17 +73,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String accessToken = tokenProvider.oAuth2CreateAccessToken(oAuth2User.getEmail());
         String refreshToken = tokenProvider.oAuth2CreateRefreshToken();
         String redisRtk = (String)redisTemplate.opsForValue().get(AuthType.REFRESHTOKEN_KEY.getByItem() + oAuth2User.getEmail());
-        ResponseCookie cookie = ResponseCookie.from(AuthType.REFRESHTOKEN_KEY.getByItem(),refreshToken)
-                .maxAge(1209600)
-                .path("/")
-                .secure(true)
-                .sameSite("None")
-                .httpOnly(true)
-                .build();
-
-        response.setHeader(TokenProvider.AUTHORIZATION_HEADER,  accessToken);
-        response.setHeader(TokenProvider.REFRESHTOKEN_HEADER, cookie.toString());
-        response.setStatus(HttpServletResponse.SC_OK);
 
         if(StringUtils.hasText(redisRtk)){
             redisTemplate.delete(AuthType.REFRESHTOKEN_KEY.getByItem() + oAuth2User.getEmail());
@@ -84,7 +83,18 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                         refreshToken,
                         tokenProvider.getExpiration(refreshToken),
                         TimeUnit.MILLISECONDS);
-    }
 
+        ResponseCookie cookie = ResponseCookie.from(AuthType.REFRESHTOKEN_KEY.getByItem(),refreshToken)
+                .maxAge(1209600)
+                .path("/")
+                .secure(true)
+                .sameSite("None")
+                .httpOnly(true)
+                .build();
+
+        response.setHeader(TokenProvider.AUTHORIZATION_HEADER,  accessToken);
+        response.setHeader(TokenProvider.REFRESHTOKEN_HEADER, cookie.toString());
+        response.sendRedirect("http://localhost:8080?socialLogin=success");
+    }
 
 }

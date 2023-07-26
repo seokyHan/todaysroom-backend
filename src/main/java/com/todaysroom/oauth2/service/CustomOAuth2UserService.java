@@ -117,31 +117,4 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         return findUser;
     }
-
-//    private UserEntity getUser(OAuthAttributes attributes, SocialType socialType) {
-//        UserEntity findUser = userRepository.findBySocialTypeAndSocialId(socialType,
-//                attributes.getOAuth2UserInfo().getId()).orElse(null);
-//
-//        if(findUser == null) {
-//            return saveUser(attributes, socialType);
-//        }
-//        return findUser;
-//    }
-
-//    private UserEntity saveUser(OAuthAttributes attributes, SocialType socialType) {
-//        Authority authority = null;
-//        try {
-//            authority = authorityRepository.findById(3L).orElseThrow(Exception::new);
-//        } catch (Exception e) {
-//            throw new CustomException(ErrorCode.NOT_EXISTS_AUTHORITY);
-//        }
-//
-//        UserEntity createdUser = attributes.toUserEntity(socialType, attributes.getOAuth2UserInfo());
-//        createdUser = userRepository.save(createdUser); // Save the UserEntity first
-//
-//        UserAuthority createdUserAuthority = attributes.toUserAuthorityEntity(createdUser, authority);
-//        userAuthorityRepository.save(createdUserAuthority);
-//
-//        return createdUser;
-//    }
 }
