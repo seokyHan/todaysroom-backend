@@ -27,9 +27,9 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 public class TokenProvider implements InitializingBean {
-    private static final String AUTHORITIES_KEY = AuthType.AUTHORITIES_KEY.getByItem();
+    public static final String AUTHORITIES_KEY = AuthType.AUTHORITIES_KEY.getByItem();
     public static final String AUTHORIZATION_HEADER = AuthType.AUTHORIZATION_HEADER.getByItem();
-    public static final String REFRESHTOKEN_HEADER = AuthType.REFRESHTOKEN_HEADER.getByItem();
+    public static final String COOKIE_HEADER = AuthType.COOKIE_HEADER.getByItem();
     public static final String TOKEN_HEADER = AuthType.TOKEN_HEADER.getByItem();
     private final String secret;
     private final long tokenValidityInMilliseconds;
@@ -66,12 +66,13 @@ public class TokenProvider implements InitializingBean {
                 .compact();
     }
 
-    public String oAuth2CreateRefreshToken() {
+    public String oAuth2CreateRefreshToken(String email) {
         long now = (new Date()).getTime();
         Date rtkValidity = new Date(now + refreshTokenValidityInMilliseconds);
 
         return Jwts.builder()
                 .setSubject("RefreshToken")
+                .claim("email", email)
                 .setExpiration(rtkValidity)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();

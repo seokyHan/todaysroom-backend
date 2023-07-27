@@ -227,7 +227,7 @@ public class UserService {
     public HttpHeaders addHttpHeaders(String accessToken, String refreshToken){
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(TokenProvider.AUTHORIZATION_HEADER, accessToken);
-        httpHeaders.add(TokenProvider.REFRESHTOKEN_HEADER, refreshToken);
+        httpHeaders.add(TokenProvider.COOKIE_HEADER, refreshToken);
 
         return httpHeaders;
     }
