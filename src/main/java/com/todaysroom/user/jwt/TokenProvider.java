@@ -1,5 +1,6 @@
 package com.todaysroom.user.jwt;
 
+import com.todaysroom.types.Role;
 import com.todaysroom.user.dto.UserTokenInfoDto;
 import com.todaysroom.types.AuthType;
 import io.jsonwebtoken.*;
@@ -54,25 +55,25 @@ public class TokenProvider implements InitializingBean {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String oAuth2CreateAccessToken(String email) {
+    public String oAuth2CreateAccessToken(String email, Role role) {
         long now = (new Date()).getTime();
         Date validity = new Date(now + tokenValidityInMilliseconds);
 
         return Jwts.builder()
                 .setSubject("AccessToken")
-                .claim("email", email)
+                .claim(AUTHORITIES_KEY, role)
                 .setExpiration(validity)  //토큰 만료 시간 설정
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
 
-    public String oAuth2CreateRefreshToken(String email) {
+    public String oAuth2CreateRefreshToken(String email, Role role) {
         long now = (new Date()).getTime();
         Date rtkValidity = new Date(now + refreshTokenValidityInMilliseconds);
 
         return Jwts.builder()
                 .setSubject("RefreshToken")
-                .claim("email", email)
+                .claim(AUTHORITIES_KEY, role)
                 .setExpiration(rtkValidity)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();

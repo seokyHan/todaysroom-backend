@@ -70,6 +70,10 @@ jwt:
   token-validity-in-seconds: 1800
   refresh-token-validity-in-sec: 1209600
 
+oauth:
+  redirect-url-guest: http://localhost:8080/signup
+  redirect-url-user: http://localhost:8080/
+
 logging:
   level:
     org.hibernate:

@@ -3,6 +3,7 @@ package com.todaysroom.user.service;
 
 import com.todaysroom.exception.CustomException;
 import com.todaysroom.oauth2.CustomOAuth2User;
+import com.todaysroom.types.Role;
 import com.todaysroom.user.dto.UserLoginDto;
 import com.todaysroom.user.dto.UserSignupDto;
 import com.todaysroom.user.dto.UserTokenInfoDto;
@@ -81,10 +82,6 @@ public class UserService {
                         tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
                         TimeUnit.MILLISECONDS);
 
-
-
-
-
         return setResponseData(userTokenInfoDto);
     }
 
@@ -151,6 +148,41 @@ public class UserService {
                 .nickname(userInfo.getNickname())
                 .recentSearch(userInfo.getRecentSearch())
                 .build();
+
+        return setResponseData(userTokenInfoDto);
+    }
+
+    @Transactional
+    public ResponseEntity<UserTokenInfoDto> socialUserSignUp(UserSignupDto userSignupDto) throws Exception{
+        log.info("security getContext() : {} ",  SecurityContextHolder.getContext().getAuthentication().getName());
+        String refreshToken = tokenProvider.oAuth2CreateRefreshToken(SecurityContextHolder.getContext().getAuthentication().getName(), Role.USER);
+
+        UserEntity userEntity = userRepository.findByUserEmail(SecurityContextHolder.getContext().getAuthentication().getName());
+        userEntity.setNickname(userSignupDto.nickname());
+        userRepository.save(userEntity);
+
+        Authority authority = authorityRepository.findById(2L).orElseThrow(Exception::new);
+        UserAuthority userAuthority = UserAuthority.builder()
+                .userEntity(userEntity)
+                .auth(authority)
+                .build();
+        userAuthorityRepository.save(userAuthority);
+
+        UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.builder()
+                .refreshToken(refreshToken)
+                .id(userEntity.getId())
+                .userEmail(userEntity.getUserEmail())
+                .userName(userEntity.getUserName())
+                .nickname(userEntity.getNickname())
+                .build();
+
+
+        redisTemplate.opsForValue()
+                .set(AuthType.REFRESHTOKEN_KEY.getByItem() + userTokenInfoDto.userEmail(),
+                        userTokenInfoDto.refreshToken(),
+                        tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
+                        TimeUnit.MILLISECONDS);
+
 
         return setResponseData(userTokenInfoDto);
     }

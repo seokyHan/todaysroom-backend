@@ -84,5 +84,9 @@ public class UserEntity {
         this.role = role;
         this.authorities = authorities;
     }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
 }
 
