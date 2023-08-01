@@ -154,19 +154,19 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<UserTokenInfoDto> socialUserSignUp(UserSignupDto userSignupDto) throws Exception{
-        log.info("security getContext() : {} ",  SecurityContextHolder.getContext().getAuthentication().getName());
-        String refreshToken = tokenProvider.oAuth2CreateRefreshToken(SecurityContextHolder.getContext().getAuthentication().getName(), Role.USER);
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String refreshToken = tokenProvider.oAuth2CreateRefreshToken(email, Role.USER);
 
-        UserEntity userEntity = userRepository.findByUserEmail(SecurityContextHolder.getContext().getAuthentication().getName());
+        UserEntity userEntity = userRepository.findByUserEmail(email);
         userEntity.setNickname(userSignupDto.nickname());
-        userRepository.save(userEntity);
+        userEntity.setRole(Role.USER);
 
         Authority authority = authorityRepository.findById(2L).orElseThrow(Exception::new);
-        UserAuthority userAuthority = UserAuthority.builder()
-                .userEntity(userEntity)
-                .auth(authority)
-                .build();
+        UserAuthority userAuthority = userAuthorityRepository.findByUserEntity(userEntity);
+        userAuthority.setAuth(authority);
+
         userAuthorityRepository.save(userAuthority);
+        userRepository.save(userEntity);
 
         UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.builder()
                 .refreshToken(refreshToken)
@@ -176,13 +176,11 @@ public class UserService {
                 .nickname(userEntity.getNickname())
                 .build();
 
-
         redisTemplate.opsForValue()
                 .set(AuthType.REFRESHTOKEN_KEY.getByItem() + userTokenInfoDto.userEmail(),
                         userTokenInfoDto.refreshToken(),
                         tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
                         TimeUnit.MILLISECONDS);
-
 
         return setResponseData(userTokenInfoDto);
     }
@@ -252,7 +250,6 @@ public class UserService {
                 .httpOnly(true)
                 .build();
         HttpHeaders httpHeaders = addHttpHeaders(userTokenInfoDto.accessToken(), cookie.toString());
-
 
         return new ResponseEntity<>(userTokenInfoDto, httpHeaders, HttpStatus.OK);
     }

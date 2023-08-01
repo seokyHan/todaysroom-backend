@@ -60,7 +60,7 @@ public class TokenProvider implements InitializingBean {
         Date validity = new Date(now + tokenValidityInMilliseconds);
 
         return Jwts.builder()
-                .setSubject("AccessToken")
+                .setSubject(email)
                 .claim(AUTHORITIES_KEY, role)
                 .setExpiration(validity)  //토큰 만료 시간 설정
                 .signWith(key, SignatureAlgorithm.HS512)
@@ -72,7 +72,7 @@ public class TokenProvider implements InitializingBean {
         Date rtkValidity = new Date(now + refreshTokenValidityInMilliseconds);
 
         return Jwts.builder()
-                .setSubject("RefreshToken")
+                .setSubject(email)
                 .claim(AUTHORITIES_KEY, role)
                 .setExpiration(rtkValidity)
                 .signWith(key, SignatureAlgorithm.HS512)

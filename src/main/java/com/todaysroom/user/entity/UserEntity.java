@@ -47,7 +47,7 @@ public class UserEntity {
     @Column(name = "activated")
     private boolean activated;
 
-    @OneToMany(cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     @JsonManagedReference(value = "user-userAuthority")
     private List<UserAuthority> authorities;
@@ -87,6 +87,10 @@ public class UserEntity {
 
     public void setNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }
 

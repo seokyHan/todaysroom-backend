@@ -31,4 +31,10 @@ public class UserAuthority {
         this.userEntity = userEntity;
         this.auth = auth;
     }
+
+    public void setAuth(Authority auth) {
+        this.auth = auth;
+    }
+
+    
 }
