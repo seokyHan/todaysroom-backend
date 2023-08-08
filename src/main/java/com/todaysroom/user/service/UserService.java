@@ -158,12 +158,11 @@ public class UserService {
         String refreshToken = tokenProvider.oAuth2CreateRefreshToken(email, Role.USER);
 
         UserEntity userEntity = userRepository.findByUserEmail(email);
-        userEntity.setNickname(userSignupDto.nickname());
-        userEntity.setRole(Role.USER);
+        userEntity.socialUserUpdate(Role.USER, userSignupDto.nickname());
 
         Authority authority = authorityRepository.findById(2L).orElseThrow(Exception::new);
         UserAuthority userAuthority = userAuthorityRepository.findByUserEntity(userEntity);
-        userAuthority.setAuth(authority);
+        userAuthority.authUpdate(authority);
 
         userAuthorityRepository.save(userAuthority);
         userRepository.save(userEntity);

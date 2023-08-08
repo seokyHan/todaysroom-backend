@@ -85,12 +85,10 @@ public class UserEntity {
         this.authorities = authorities;
     }
 
-    public void setNickname(String nickname) {
+    public void socialUserUpdate(Role role, String nickname) {
+        this.role = role;
         this.nickname = nickname;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
-    }
 }
 

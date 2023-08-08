@@ -32,7 +32,7 @@ public class UserAuthority {
         this.auth = auth;
     }
 
-    public void setAuth(Authority auth) {
+    public void authUpdate(Authority auth){
         this.auth = auth;
     }
 
