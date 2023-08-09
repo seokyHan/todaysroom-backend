@@ -2,6 +2,7 @@ package com.todaysroom.inquiry.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.todaysroom.common.BaseTimeEntity;
 import com.todaysroom.inquiry.dto.InquiryUpdateDto;
 import com.todaysroom.user.entity.UserEntity;
 import jakarta.persistence.*;
@@ -16,7 +17,7 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Inquiry {
+public class Inquiry extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
