@@ -1,14 +1,12 @@
 package com.todaysroom.user.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.todaysroom.common.BaseTimeEntity;
 import com.todaysroom.types.Role;
 import com.todaysroom.types.SocialType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.validator.constraints.Length;
 
 import java.util.List;
@@ -19,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 // insert시 null인 필드 제외
 // @DynamicInsert
-public class UserEntity {
+public class UserEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

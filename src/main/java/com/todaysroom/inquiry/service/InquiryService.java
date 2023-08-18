@@ -23,7 +23,11 @@ public class InquiryService {
 
     @Transactional
     public InquiryResponseDto save(InquiryRequestDto inquiryRequestDto) throws NoUserException {
-        UserEntity userEntity = userRepository.findById(inquiryRequestDto.id()).orElseThrow(NoUserException::new);
+        log.info("id : {}", inquiryRequestDto.userId());
+        log.info("title : {}", inquiryRequestDto.title());
+        log.info("content : {}", inquiryRequestDto.content());
+        log.info("type : {}", inquiryRequestDto.inquiryType());
+        UserEntity userEntity = userRepository.findById(inquiryRequestDto.userId()).orElseThrow(NoUserException::new);
 
         return InquiryResponseDto.from(inquiryRepository.save(inquiryRequestDto.toSaveInquiryEntity(userEntity)));
     }
