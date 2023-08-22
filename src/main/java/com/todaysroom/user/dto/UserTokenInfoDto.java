@@ -3,6 +3,8 @@ package com.todaysroom.user.dto;
 import com.todaysroom.user.entity.UserEntity;
 import lombok.Builder;
 
+import java.util.List;
+
 
 public record UserTokenInfoDto(String accessToken,
                                String refreshToken,
@@ -10,7 +12,8 @@ public record UserTokenInfoDto(String accessToken,
                                String userEmail,
                                String userName,
                                String nickname,
-                               String recentSearch) {
+                               String recentSearch,
+                               List<String> authorities) {
 
     @Builder
     public UserTokenInfoDto {

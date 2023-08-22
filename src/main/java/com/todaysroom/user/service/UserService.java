@@ -2,7 +2,6 @@ package com.todaysroom.user.service;
 
 
 import com.todaysroom.exception.CustomException;
-import com.todaysroom.oauth2.CustomOAuth2User;
 import com.todaysroom.types.Role;
 import com.todaysroom.user.dto.UserLoginDto;
 import com.todaysroom.user.dto.UserSignupDto;
@@ -32,14 +31,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.Date;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -65,6 +63,9 @@ public class UserService {
 
         UserTokenInfoDto tokenInfo = tokenProvider.generateToken(authentication);
         UserEntity userEntity = userRepository.findByUserEmail(userLoginDto.userEmail());
+        List<String> userAuthorities = userEntity.getAuthorities().stream()
+                .map(authority -> authority.getAuth().getAuthorityName())
+                .collect(Collectors.toList());
 
         UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.builder()
                 .accessToken(tokenInfo.accessToken())
@@ -74,6 +75,7 @@ public class UserService {
                 .userName(userEntity.getUserName())
                 .nickname(userEntity.getNickname())
                 .recentSearch(userEntity.getRecentSearch())
+                .authorities(userAuthorities)
                 .build();
 
         redisTemplate.opsForValue()
@@ -126,6 +128,9 @@ public class UserService {
         }
 
         UserEntity userInfo = userRepository.findByUserEmail(authentication.getName());
+        List<String> userAuthorities = userInfo.getAuthorities().stream()
+                .map(authority -> authority.getAuth().getAuthorityName())
+                .collect(Collectors.toList());
 
         if (userInfo == null) {
             return ResponseEntity.badRequest().build();
@@ -147,6 +152,7 @@ public class UserService {
                 .userName(userInfo.getUserName())
                 .nickname(userInfo.getNickname())
                 .recentSearch(userInfo.getRecentSearch())
+                .authorities(userAuthorities)
                 .build();
 
         return setResponseData(userTokenInfoDto);

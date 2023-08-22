@@ -2,6 +2,7 @@ package com.todaysroom.user.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.todaysroom.common.BaseTimeEntity;
+import com.todaysroom.inquiry.entity.Inquiry;
 import com.todaysroom.types.Role;
 import com.todaysroom.types.SocialType;
 import jakarta.persistence.*;
@@ -49,6 +50,11 @@ public class UserEntity extends BaseTimeEntity {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     @JsonManagedReference(value = "user-userAuthority")
     private List<UserAuthority> authorities;
+
+    @OneToMany(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JsonManagedReference(value = "user-inquiry")
+    private List<Inquiry> inquiries;
 
     //OAuth2
     @Enumerated(EnumType.STRING)

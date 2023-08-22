@@ -12,7 +12,7 @@ public record InquiryResponseDto(Long id,
                                  String content,
                                  String inquiryType,
                                  boolean isComplete,
-                                 LocalDateTime createDate,
+                                 LocalDateTime createdDate,
                                  LocalDateTime modifyDate,
                                  List<InquiryAnswer> inquiryAnswers) {
 

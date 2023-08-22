@@ -6,12 +6,10 @@ import com.todaysroom.inquiry.dto.InquiryResponseDto;
 import com.todaysroom.inquiry.service.InquiryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,6 +17,16 @@ import java.net.URI;
 public class InquiryController {
 
     private final InquiryService inquiryService;
+
+    @GetMapping
+    public ResponseEntity<List<InquiryResponseDto>> getInquiries(@RequestParam("userId") Long userId) throws NoUserException {
+        return ResponseEntity.ok(inquiryService.getInquiries(userId));
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<List<InquiryResponseDto>> getAllInquiries(){
+        return ResponseEntity.ok(inquiryService.getAllInquiries());
+    }
 
     @PostMapping("/create")
     public ResponseEntity<String> save(@RequestBody InquiryRequestDto inquiryRequestDto) throws NoUserException {
