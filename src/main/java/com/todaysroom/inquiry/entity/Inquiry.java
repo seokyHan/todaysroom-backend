@@ -44,6 +44,7 @@ public class Inquiry extends BaseTimeEntity {
     @JsonManagedReference(value = "inquiry-inquiry_answer")
     private List<InquiryAnswer> inquiryAnswer;
 
+
     public void updateInquiry(InquiryUpdateDto inquiryUpdateDto){
         this.title = inquiryUpdateDto.title();
         this.content = inquiryUpdateDto.content();

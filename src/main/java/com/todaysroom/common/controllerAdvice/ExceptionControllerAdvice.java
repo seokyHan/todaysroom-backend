@@ -1,4 +1,4 @@
-package com.todaysroom.common.ControllerAdvice;
+package com.todaysroom.common.controllerAdvice;
 
 import com.todaysroom.common.ErrorResponse;
 import com.todaysroom.exception.NoUserException;

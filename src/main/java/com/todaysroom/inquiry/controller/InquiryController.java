@@ -5,8 +5,10 @@ import com.todaysroom.inquiry.dto.InquiryRequestDto;
 import com.todaysroom.inquiry.dto.InquiryResponseDto;
 import com.todaysroom.inquiry.service.InquiryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.util.List;
@@ -28,8 +30,8 @@ public class InquiryController {
         return ResponseEntity.ok(inquiryService.getAllInquiries());
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<String> save(@RequestBody InquiryRequestDto inquiryRequestDto) throws NoUserException {
+    @PostMapping(value ="/create", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<String> save(@RequestPart InquiryRequestDto inquiryRequestDto, @RequestPart List<MultipartFile> files) throws NoUserException {
         InquiryResponseDto postResponseDto = inquiryService.save(inquiryRequestDto);
         return ResponseEntity.created(URI.create("/" + postResponseDto.id())).build();
     }

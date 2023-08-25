@@ -4,6 +4,7 @@ import com.todaysroom.inquiry.entity.Inquiry;
 import com.todaysroom.user.entity.UserEntity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import lombok.Setter;
 
 public record InquiryRequestDto(@Positive(message = "사용자 없음") Long userId,
                                 @NotBlank(message = "문의 유형이 없습니다.") String inquiryType,
