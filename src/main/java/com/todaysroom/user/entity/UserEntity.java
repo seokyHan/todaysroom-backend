@@ -57,11 +57,6 @@ public class UserEntity extends BaseTimeEntity {
     @JsonManagedReference(value = "user-inquiry")
     private List<Inquiry> inquiries;
 
-    @OneToMany(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    @JsonManagedReference(value = "user-files")
-    private List<UserFiles> files;
-
 
     //OAuth2
     @Enumerated(EnumType.STRING)

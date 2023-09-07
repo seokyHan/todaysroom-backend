@@ -21,15 +21,12 @@ public class UserFiles extends BaseTimeEntity {
     @Column(name = "id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    @JsonBackReference(value = "user-files")
-    private UserEntity userEntity;
-
     @ManyToOne
     @JoinColumn(name = "file_location")
     @JsonBackReference(value = "userFiles-files")
     private Files file;
+
+    private Long postId;
 
     private String origFilename;
 
@@ -40,8 +37,9 @@ public class UserFiles extends BaseTimeEntity {
     private String fileSize;
 
     @Builder
-    public UserFiles(Long id, Inquiry inquiry, String origFilename, String fileName, String filePath, String fileSize) {
+    public UserFiles(Long id, Long postId, String origFilename, String fileName, String filePath, String fileSize) {
         this.id = id;
+        this.postId = postId;
         this.origFilename = origFilename;
         this.fileName = fileName;
         this.filePath = filePath;
