@@ -28,21 +28,25 @@ public class UserFiles extends BaseTimeEntity {
 
     private Long postId;
 
-    private String origFilename;
+    private String originalFilename;
 
     private String fileName;
 
     private String filePath;
 
-    private String fileSize;
+    private Long fileSize;
+
+    private String contentType;
 
     @Builder
-    public UserFiles(Long id, Long postId, String origFilename, String fileName, String filePath, String fileSize) {
+    public UserFiles(Long id, Files file, Long postId, String originalFilename, String fileName, String filePath, Long fileSize, String contentType) {
         this.id = id;
+        this.file = file;
         this.postId = postId;
-        this.origFilename = origFilename;
+        this.originalFilename = originalFilename;
         this.fileName = fileName;
         this.filePath = filePath;
         this.fileSize = fileSize;
+        this.contentType = contentType;
     }
 }

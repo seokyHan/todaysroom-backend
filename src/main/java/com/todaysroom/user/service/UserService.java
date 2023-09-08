@@ -1,6 +1,7 @@
 package com.todaysroom.user.service;
 
 
+import com.todaysroom.oauth2.exception.AuthorityNotFoundException;
 import com.todaysroom.types.Role;
 import com.todaysroom.user.dto.UserLoginDto;
 import com.todaysroom.user.dto.UserSignupDto;
@@ -207,7 +208,7 @@ public class UserService {
                 .nickname(signupUser.getNickname())
                 .build();
 
-        Authority authority = authorityRepository.findById(2L).orElseThrow(Exception::new);
+        Authority authority = authorityRepository.findById(2L).orElseThrow(AuthorityNotFoundException::new);
         UserAuthority userAuthority = UserAuthority.builder()
                         .userEntity(userEntity)
                         .auth(authority)

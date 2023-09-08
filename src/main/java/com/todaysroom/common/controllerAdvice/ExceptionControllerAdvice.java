@@ -1,6 +1,8 @@
 package com.todaysroom.common.controllerAdvice;
 
 import com.todaysroom.common.ErrorResponse;
+import com.todaysroom.common.file.exception.FailedMakeDirectoryException;
+import com.todaysroom.common.file.exception.FailedStoreFileException;
 import com.todaysroom.inquiry.exception.NoInquiryIdException;
 import com.todaysroom.oauth2.exception.AuthorityNotFoundException;
 import com.todaysroom.user.exception.DuplicatedEmailException;
@@ -46,5 +48,17 @@ public class ExceptionControllerAdvice {
     public ResponseEntity<ErrorResponse> NoInquiryIdException(NoInquiryIdException e) {
         log.error(e.getMessage(), e);
         return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), e.getMessage()));
+    }
+
+    @ExceptionHandler(FailedMakeDirectoryException.class)
+    public ResponseEntity<ErrorResponse> FailedMakeDirectoryException(FailedMakeDirectoryException e) {
+        log.error(e.getMessage(), e);
+        return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
+    }
+
+    @ExceptionHandler(FailedStoreFileException.class)
+    public ResponseEntity<ErrorResponse> FailedStoreFileException(FailedStoreFileException e) {
+        log.error(e.getMessage(), e);
+        return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
     }
 }
