@@ -1,7 +1,6 @@
 package com.todaysroom.user.controller;
 
 
-import com.todaysroom.exception.CustomException;
 import com.todaysroom.user.dto.UserSignupDto;
 import com.todaysroom.user.dto.UserTokenInfoDto;
 import com.todaysroom.user.dto.UserLoginDto;

@@ -1,4 +1,4 @@
-package com.todaysroom.exception;
+package com.todaysroom.user.exception;
 
 public class NoUserException extends IllegalAccessException{
     public NoUserException(){

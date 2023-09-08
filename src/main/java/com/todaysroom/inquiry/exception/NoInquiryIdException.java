@@ -1,4 +1,4 @@
-package com.todaysroom.exception;
+package com.todaysroom.inquiry.exception;
 
 public class NoInquiryIdException extends IllegalAccessException{
     public NoInquiryIdException() {

@@ -1,7 +1,6 @@
 package com.todaysroom.user.service;
 
 
-import com.todaysroom.exception.CustomException;
 import com.todaysroom.types.Role;
 import com.todaysroom.user.dto.UserLoginDto;
 import com.todaysroom.user.dto.UserSignupDto;
@@ -9,6 +8,9 @@ import com.todaysroom.user.dto.UserTokenInfoDto;
 import com.todaysroom.user.entity.Authority;
 import com.todaysroom.user.entity.UserAuthority;
 import com.todaysroom.user.entity.UserEntity;
+import com.todaysroom.user.exception.DuplicatedEmailException;
+import com.todaysroom.user.exception.ExpiredRefreshTokenException;
+import com.todaysroom.user.exception.NoRefreshTokenException;
 import com.todaysroom.user.jwt.TokenProvider;
 import com.todaysroom.user.repository.AuthorityRepository;
 import com.todaysroom.user.repository.UserAuthorityRepository;
@@ -37,7 +39,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -119,12 +120,12 @@ public class UserService {
 
         // Redis 저장된 RefreshToken 찾은 후 없으면 401 에러
         if(ObjectUtils.isEmpty(refreshToken)){
-            throw  new CustomException(ErrorCode.UNAUTHORIZED);
+            throw  new NoRefreshTokenException();
         }
 
         // RefreshToken이 만료 됐는지
         if (!tokenProvider.validateToken(refreshToken)) {
-            throw new CustomException(ErrorCode.JWT_REFRESH_TOKEN_EXPIRED);
+            throw  new ExpiredRefreshTokenException();
         }
 
         UserEntity userInfo = userRepository.findByUserEmail(authentication.getName());
@@ -193,7 +194,7 @@ public class UserService {
     @Transactional
     public ResponseEntity signup(UserSignupDto userSignupDto) throws Exception {
         if(!validateDuplicatedEmail(userSignupDto.userEmail())){
-            throw new CustomException(ErrorCode.DUPLICATED_USER_EMAIL);
+            throw new DuplicatedEmailException();
         }
 
         UserEntity signupUser = userSignupDto.toUserEntity();

@@ -1,6 +1,6 @@
 package com.todaysroom.inquiry.controller;
 
-import com.todaysroom.exception.NoUserException;
+import com.todaysroom.user.exception.NoUserException;
 import com.todaysroom.inquiry.dto.InquiryRequestDto;
 import com.todaysroom.inquiry.dto.InquiryResponseDto;
 import com.todaysroom.inquiry.service.InquiryService;

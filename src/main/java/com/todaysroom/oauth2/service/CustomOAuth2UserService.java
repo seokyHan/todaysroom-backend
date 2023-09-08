@@ -1,9 +1,9 @@
 package com.todaysroom.oauth2.service;
 
-import com.todaysroom.exception.CustomException;
+
 import com.todaysroom.oauth2.CustomOAuth2User;
 import com.todaysroom.oauth2.OAuthAttributes;
-import com.todaysroom.types.ErrorCode;
+import com.todaysroom.oauth2.exception.AuthorityNotFoundException;
 import com.todaysroom.types.SocialType;
 import com.todaysroom.user.entity.Authority;
 import com.todaysroom.user.entity.UserAuthority;
@@ -100,7 +100,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     @Transactional
     public UserEntity getUserOrCreateUser(OAuthAttributes attributes, SocialType socialType) {
         Authority authority = authorityRepository.findById(3L)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXISTS_AUTHORITY));
+                .orElseThrow(AuthorityNotFoundException::new);
 
         UserEntity findUser = userRepository.findBySocialTypeAndSocialId(socialType,
                 attributes.getOAuth2UserInfo().getId()).orElse(null);

@@ -1,7 +1,12 @@
 package com.todaysroom.common.controllerAdvice;
 
 import com.todaysroom.common.ErrorResponse;
-import com.todaysroom.exception.NoUserException;
+import com.todaysroom.inquiry.exception.NoInquiryIdException;
+import com.todaysroom.oauth2.exception.AuthorityNotFoundException;
+import com.todaysroom.user.exception.DuplicatedEmailException;
+import com.todaysroom.user.exception.ExpiredRefreshTokenException;
+import com.todaysroom.user.exception.NoRefreshTokenException;
+import com.todaysroom.user.exception.NoUserException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,5 +21,30 @@ public class ExceptionControllerAdvice {
     public ResponseEntity<ErrorResponse> NoUserException(NoUserException e) {
         log.error(e.getMessage(), e);
         return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
+    }
+    @ExceptionHandler(DuplicatedEmailException.class)
+    public ResponseEntity<ErrorResponse> DuplicatedEmailException(DuplicatedEmailException e) {
+        log.error(e.getMessage(), e);
+        return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), e.getMessage()));
+    }
+    @ExceptionHandler(ExpiredRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> ExpiredRefreshTokenException(ExpiredRefreshTokenException e) {
+        log.error(e.getMessage(), e);
+        return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), e.getMessage()));
+    }
+    @ExceptionHandler(NoRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> NoRefreshTokenException(NoRefreshTokenException e) {
+        log.error(e.getMessage(), e);
+        return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
+    }
+    @ExceptionHandler(AuthorityNotFoundException.class)
+    public ResponseEntity<ErrorResponse> AuthorityNotFoundException(AuthorityNotFoundException e) {
+        log.error(e.getMessage(), e);
+        return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), e.getMessage()));
+    }
+    @ExceptionHandler(NoInquiryIdException.class)
+    public ResponseEntity<ErrorResponse> NoInquiryIdException(NoInquiryIdException e) {
+        log.error(e.getMessage(), e);
+        return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), e.getMessage()));
     }
 }
