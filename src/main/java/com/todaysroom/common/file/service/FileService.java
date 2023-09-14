@@ -18,7 +18,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,7 +27,7 @@ public class FileService {
     private Path imageDirectoryPath;
     private final UserFilesRepository userFilesRepository;
 
-    @Value("${file-storage-directory}")
+    @Value("${file.directory-path}")
     private String imageDirectory;
 
     //생성자(일반)가 호출 되었을 때, bean은 아직 초기화 되지 않음. (예를 들어, 주입된 의존성이 없음)

@@ -11,7 +11,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true #To beautify or pretty print the SQL
@@ -75,7 +75,7 @@ oauth:
   redirect-url-user: http://localhost:8080/
 
 file:
-  file-storage-directory: src/main/resources/static/upload-dir
+  directory-path: src/main/resources/static/upload-dir
 
 logging:
   level:
