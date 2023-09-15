@@ -43,6 +43,7 @@ public class InquiryController {
             log.info("fileList : {}", f.getOriginalFilename());
         }
 
+
         if(!fileList.isEmpty()){
             // 파일 업로드 추가 로직 구현
        }
