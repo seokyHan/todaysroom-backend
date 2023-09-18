@@ -35,19 +35,9 @@ public class InquiryController {
     @PostMapping(value ="/create")
     public ResponseEntity<String> save(@RequestPart(value = "inquiryRequestDto") InquiryRequestDto inquiryRequestDto,
                                        @RequestPart(value = "fileList", required = false) List<MultipartFile> fileList) throws NoUserException {
-        log.info("id : {}", inquiryRequestDto.userId());
-        log.info("type : {}", inquiryRequestDto.inquiryType());
-        log.info("title : {}", inquiryRequestDto.title());
-        log.info("content : {}", inquiryRequestDto.content());
-        for(MultipartFile f : fileList){
-            log.info("fileList : {}", f.getOriginalFilename());
-        }
 
-
-        if(!fileList.isEmpty()){
-            // 파일 업로드 추가 로직 구현
-       }
-        InquiryResponseDto postResponseDto = inquiryService.save(inquiryRequestDto);
+        InquiryResponseDto postResponseDto = inquiryService.create(inquiryRequestDto, fileList);
         return ResponseEntity.created(URI.create("/" + postResponseDto.id())).build();
+
     }
 }

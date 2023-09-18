@@ -7,6 +7,7 @@ import com.todaysroom.common.file.exception.FailedStoreFileException;
 import com.todaysroom.common.file.repository.UserFilesRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,10 +19,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.text.Normalizer;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FileService {
 
     private Path imageDirectoryPath;
@@ -39,7 +42,7 @@ public class FileService {
 
     @Transactional
     public void saveFiles(UserFileDto userFileDto){
-        if(userFileDto.files() == null || userFileDto.files().isEmpty()){
+        if(userFileDto.fileList() == null || userFileDto.fileList().isEmpty()){
             return;
         }
 
@@ -48,7 +51,7 @@ public class FileService {
                 Files.createDirectories(imageDirectoryPath);
             }
             // 경로 설정 -> /imageDirectoryPath/postId
-            Path subPath = imageDirectoryPath.resolve(Paths.get(String.valueOf(userFileDto.postId()))).normalize().toAbsolutePath();
+            Path subPath = imageDirectoryPath.resolve(Paths.get(userFileDto.file().getFileLocation())).normalize().toAbsolutePath();
 
             if(!Files.exists(subPath)){
                 Files.createDirectories(subPath);
@@ -58,7 +61,7 @@ public class FileService {
             throw new FailedMakeDirectoryException();
         }
 
-        for(MultipartFile file : userFileDto.files()){
+        for(MultipartFile file : userFileDto.fileList()){
             saveFile(file, userFileDto);
         }
     }
@@ -66,17 +69,17 @@ public class FileService {
     @Transactional
     public void saveFile(MultipartFile file, UserFileDto userFileDto){
         try{
-            String originFileName = file.getOriginalFilename();
+            String fileName = UUID.randomUUID()+"$$";
             long fileSize = file.getSize();
             String contentType = file.getContentType();
 
-            if(file.isEmpty() || originFileName == null){
+            if(file.isEmpty() || file.getOriginalFilename() == null){
                 throw new FailedStoreFileException();
             }
 
             Path destinationFile = imageDirectoryPath
-                    .resolve(Paths.get(String.valueOf(userFileDto.postId())))
-                    .resolve(Paths.get(originFileName))
+                    .resolve(Paths.get(userFileDto.file().getFileLocation()))
+                    .resolve(Paths.get(fileName))
                     .normalize()
                     .toAbsolutePath();
 
@@ -88,8 +91,8 @@ public class FileService {
             UserFiles userFiles = UserFiles.builder()
                     .file(uploadFiles.getFile())
                     .postId(uploadFiles.getPostId())
-                    .originalFilename(uploadFiles.getOriginalFilename())
-                    .fileName(UUID.randomUUID().toString())
+                    .originalFilename(Normalizer.normalize(file.getOriginalFilename(), Normalizer.Form.NFC))
+                    .fileName(fileName)
                     .filePath(destinationFile.toString())
                     .fileSize(fileSize)
                     .contentType(contentType)
@@ -98,6 +101,7 @@ public class FileService {
             userFilesRepository.save(userFiles);
 
         } catch (IOException e){
+            e.printStackTrace();
             throw new FailedStoreFileException();
         }
 

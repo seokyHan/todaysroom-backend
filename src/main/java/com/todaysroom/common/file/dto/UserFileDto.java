@@ -2,6 +2,7 @@ package com.todaysroom.common.file.dto;
 
 import com.todaysroom.common.file.entity.Files;
 import com.todaysroom.common.file.entity.UserFiles;
+import lombok.Builder;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -14,7 +15,11 @@ public record UserFileDto(Long id,
                           String originalFilename,
                           String contentType,
                           String filePath,
-                          List<MultipartFile> files) {
+                          List<MultipartFile> fileList) {
+
+    @Builder
+    public UserFileDto {
+    }
 
     public UserFiles toUserFilesEntity(){
         return UserFiles.builder()
