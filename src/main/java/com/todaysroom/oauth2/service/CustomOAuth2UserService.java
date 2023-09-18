@@ -98,7 +98,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
      */
     @Transactional
     public UserEntity getUserOrCreateUser(OAuthAttributes attributes, SocialType socialType) {
-        Authority authority = authorityRepository.findById(2L)
+        Authority authority = authorityRepository.findById(3L)
                 .orElseThrow(AuthorityNotFoundException::new);
 
         UserEntity findUser = userRepository.findBySocialTypeAndSocialId(socialType,
@@ -109,7 +109,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             userRepository.save(newUser);
 
             UserAuthority newUserAuthority = attributes.toUserAuthorityEntity(newUser, authority);
-            userAuthorityRepository.save(newUserAuthority);;
+            userAuthorityRepository.save(newUserAuthority);
 
             return newUser;
         }

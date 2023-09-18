@@ -161,12 +161,13 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<UserTokenInfoDto> socialUserSignUp(UserSignupDto userSignupDto) throws Exception{
+    public ResponseEntity<UserTokenInfoDto> socialUserSignUp() throws Exception{
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String accessToken = tokenProvider.oAuth2CreateAccessToken(email, Role.USER);
         String refreshToken = tokenProvider.oAuth2CreateRefreshToken(email, Role.USER);
 
         UserEntity userEntity = userRepository.findByUserEmail(email);
-        userEntity.socialUserUpdate(Role.USER, userSignupDto.nickname());
+        userEntity.socialUserUpdate(Role.USER);
 
         Authority authority = authorityRepository.findById(2L).orElseThrow(Exception::new);
         UserAuthority userAuthority = userAuthorityRepository.findByUserEntity(userEntity);
@@ -176,6 +177,7 @@ public class UserService {
         userRepository.save(userEntity);
 
         UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.builder()
+                .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .id(userEntity.getId())
                 .userEmail(userEntity.getUserEmail())

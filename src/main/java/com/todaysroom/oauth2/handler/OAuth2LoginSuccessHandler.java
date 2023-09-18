@@ -48,14 +48,13 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
 
             //최초 로그인 시
-//            if (oAuth2User.getRole() == Role.GUEST) {
-//                String accessToken = tokenProvider.oAuth2CreateAccessToken(oAuth2User.getEmail(), Role.GUEST);
-//
-//                setTokenToCookie(response, "auth", accessToken, 36000, true, false);
-//                setCookie(response, "oauth2", "success");
-//
-//                response.sendRedirect(guestRedirectUrl); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
-//            }
+            if(oAuth2User.getRole() == Role.GUEST){
+                String accessToken = tokenProvider.oAuth2CreateAccessToken(oAuth2User.getEmail(), Role.GUEST);
+
+                setCookie(response, "isFirst", "true");
+                setTokenToCookie(response, "auth", accessToken, 36000, true, false);
+                response.sendRedirect(userRedirectUrl);
+            }
             loginSuccess(response, oAuth2User); // 로그인에 성공한 경우 access, refresh 토큰 생성
 
         } catch (Exception e){

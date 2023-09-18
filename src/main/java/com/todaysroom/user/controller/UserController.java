@@ -42,9 +42,9 @@ public class UserController {
     }
 
     @PostMapping("/social/signup")
-    public ResponseEntity<UserTokenInfoDto> socialUserSignUp(@RequestBody UserSignupDto userSignupDto) throws Exception{
+    public ResponseEntity<UserTokenInfoDto> socialUserSignUp() throws Exception{
 
-        return userService.socialUserSignUp(userSignupDto);
+        return userService.socialUserSignUp();
     }
 
     @PostMapping("/signup")

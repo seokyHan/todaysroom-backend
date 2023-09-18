@@ -91,9 +91,8 @@ public class UserEntity extends BaseTimeEntity {
         this.authorities = authorities;
     }
 
-    public void socialUserUpdate(Role role, String nickname) {
+    public void socialUserUpdate(Role role) {
         this.role = role;
-        this.nickname = nickname;
     }
 
 }
