@@ -2,11 +2,12 @@ package com.todaysroom.inquiry.service;
 
 import com.todaysroom.common.file.dto.UserFileDto;
 import com.todaysroom.common.file.entity.Files;
+import com.todaysroom.common.file.entity.UserFiles;
 import com.todaysroom.common.file.repository.FilesRepository;
+import com.todaysroom.common.file.repository.UserFilesRepository;
 import com.todaysroom.common.file.service.FileService;
-import com.todaysroom.inquiry.exception.FileLocationNotFoundException;
-import com.todaysroom.oauth2.exception.AuthorityNotFoundException;
-import com.todaysroom.user.entity.Authority;
+import com.todaysroom.common.file.exception.FileLocationNotFoundException;
+import com.todaysroom.inquiry.exception.NoInquiryIdException;
 import com.todaysroom.user.exception.NoUserException;
 import com.todaysroom.inquiry.dto.InquiryRequestDto;
 import com.todaysroom.inquiry.dto.InquiryResponseDto;
@@ -21,9 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.text.Normalizer;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,15 +35,7 @@ public class InquiryService {
     private final FileService fileService;
     private final InquiryAnswerRepository inquiryAnswerRepository;
     private final UserRepository userRepository;
-
-
-    @Transactional
-    public List<InquiryResponseDto> getInquiries(Long userId) throws NoUserException {
-        UserEntity userEntity = userRepository.findById(userId).orElseThrow(NoUserException::new);
-        List<Inquiry> inquiries = inquiryRepository.findByUserEntityId(userEntity.getId());
-
-        return inquiries.stream().map(InquiryResponseDto::from).collect(Collectors.toList());
-    }
+    private final UserFilesRepository userFilesRepository;
 
     @Transactional
     public List<InquiryResponseDto> getAllInquiries(){
@@ -52,6 +43,28 @@ public class InquiryService {
 
         return inquiries.stream().map(InquiryResponseDto::from).collect(Collectors.toList());
     }
+
+    @Transactional
+    public List<InquiryResponseDto> getInquiriesByUserId(Long userId) throws NoUserException {
+        UserEntity userEntity = userRepository.findById(userId).orElseThrow(NoUserException::new);
+        List<Inquiry> inquiries = inquiryRepository.findByUserEntityId(userEntity.getId());
+
+        return inquiries.stream().map(InquiryResponseDto::from).collect(Collectors.toList());
+    }
+
+    @Transactional InquiryResponseDto getInquiresById(Long id) throws NoInquiryIdException{
+        Inquiry inquiry = inquiryRepository.findById(id).orElseThrow(NoInquiryIdException::new);
+        Files files = filesRepository.findById(1L).orElseThrow(FileLocationNotFoundException::new);
+        List<UserFiles> fileList = userFilesRepository.findByPostIdAndFileId(inquiry.getId(), files.getId());
+
+        if(fileList != null || !fileList.isEmpty()) {
+
+        }
+
+        return InquiryResponseDto.from(inquiry);
+
+    }
+
 
     @Transactional
     public InquiryResponseDto create(InquiryRequestDto inquiryRequestDto, List<MultipartFile> fileList) throws NoUserException {

@@ -24,7 +24,7 @@ public class InquiryController {
 
     @GetMapping
     public ResponseEntity<List<InquiryResponseDto>> getInquiries(@RequestParam("userId") Long userId) throws NoUserException {
-        return ResponseEntity.ok(inquiryService.getInquiries(userId));
+        return ResponseEntity.ok(inquiryService.getInquiriesByUserId(userId));
     }
 
     @GetMapping("/admin")

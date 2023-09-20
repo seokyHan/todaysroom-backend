@@ -1,4 +1,4 @@
-package com.todaysroom.inquiry.exception;
+package com.todaysroom.common.file.exception;
 
 public class FileLocationNotFoundException extends RuntimeException{
 

@@ -17,11 +17,18 @@ spring:
         format_sql: true #To beautify or pretty print the SQL
         show_sql: true #show sql
 
+  # File 크기
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   data:
     redis:
       host: localhost
       port: 6379
 
+#Spring Security OAuth2
   security:
     oauth2:
       client:
@@ -61,6 +68,8 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
+
+# JWT
 #HS512 알고리즘을 사용할 것이기 때문에 512bit, 즉 64byte 이상의 secret key를 사용해야 한다.
 #echo 'silvernine-tech-spring-boot-jwt-tutorial-secret-silvernine-tech-spring-boot-jwt-tutorial-secret'|base64
 jwt:
@@ -70,13 +79,19 @@ jwt:
   token-validity-in-seconds: 1800
   refresh-token-validity-in-sec: 1209600
 
+# oauth2 url
 oauth:
   redirect-url-guest: http://localhost:8080/signup
   redirect-url-user: http://localhost:8080/
 
+
+# File
+# 서버 이미지 자원을 사용하기 위해서는 resources/static에 이미지가 저장되어 있어야함
+# 나중에 배포하게 되면 클라이언트 코드 빌드되면서 resource 폴더가 clear 되기 때문에 경로 수정 필요
 file:
   directory-path: src/main/resources/static/upload-dir
 
+# Log
 logging:
   level:
     org.hibernate:
