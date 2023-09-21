@@ -1,8 +1,7 @@
 package com.todaysroom.common.file.repository;
 
-import com.todaysroom.common.file.entity.Files;
-import com.todaysroom.common.file.entity.UserFiles;
+import com.todaysroom.common.file.entity.FilesLocation;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface FilesRepository extends JpaRepository<Files, Long> {
+public interface FilesRepository extends JpaRepository<FilesLocation, Long> {
 }

@@ -9,7 +9,7 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Files {
+public class FilesLocation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,7 +18,7 @@ public class Files {
     private String fileLocation;
 
     @OneToMany
-    @JoinColumn(name = "file_location")
+    @JoinColumn(name = "location")
     @JsonBackReference(value = "userFiles-files")
     private List<UserFiles> fileList;
 

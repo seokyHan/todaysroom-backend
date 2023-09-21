@@ -1,9 +1,12 @@
 package com.todaysroom.common.file.service;
 
-import com.todaysroom.common.file.dto.UserFileDto;
+import com.todaysroom.common.file.dto.UserFileRequestDto;
+import com.todaysroom.common.file.entity.FilesLocation;
 import com.todaysroom.common.file.entity.UserFiles;
 import com.todaysroom.common.file.exception.FailedMakeDirectoryException;
 import com.todaysroom.common.file.exception.FailedStoreFileException;
+import com.todaysroom.common.file.exception.FileLocationNotFoundException;
+import com.todaysroom.common.file.repository.FilesRepository;
 import com.todaysroom.common.file.repository.UserFilesRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.Normalizer;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -29,6 +33,7 @@ public class FileService {
 
     private Path imageDirectoryPath;
     private final UserFilesRepository userFilesRepository;
+    private final FilesRepository filesRepository;
 
     @Value("${file.directory-path}")
     private String imageDirectory;
@@ -41,7 +46,7 @@ public class FileService {
     }
 
     @Transactional
-    public void saveFiles(UserFileDto userFileDto){
+    public void saveFiles(UserFileRequestDto userFileDto){
         if(userFileDto.fileList() == null || userFileDto.fileList().isEmpty()){
             return;
         }
@@ -67,7 +72,21 @@ public class FileService {
     }
 
     @Transactional
-    public void saveFile(MultipartFile file, UserFileDto userFileDto){
+    public FilesLocation findByFileLocationId(Long id){
+        FilesLocation filesLocation = filesRepository.findById(id).orElseThrow(FileLocationNotFoundException::new);
+
+        return filesLocation;
+    }
+
+    @Transactional
+    public List<UserFiles> findByPostIdAndFileLocationId(Long postId, Long fileLocationId){
+        List<UserFiles> fileList = userFilesRepository.findByPostIdAndFileId(postId, fileLocationId);
+
+        return fileList;
+    }
+
+    @Transactional
+    public void saveFile(MultipartFile file, UserFileRequestDto userFileDto){
         try{
             String fileName = UUID.randomUUID()+"$$";
             long fileSize = file.getSize();

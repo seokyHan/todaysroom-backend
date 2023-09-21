@@ -1,5 +1,6 @@
 package com.todaysroom.inquiry.controller;
 
+import com.todaysroom.inquiry.exception.NoInquiryIdException;
 import com.todaysroom.user.exception.NoUserException;
 import com.todaysroom.inquiry.dto.InquiryRequestDto;
 import com.todaysroom.inquiry.dto.InquiryResponseDto;
@@ -23,8 +24,13 @@ public class InquiryController {
     private final InquiryService inquiryService;
 
     @GetMapping
-    public ResponseEntity<List<InquiryResponseDto>> getInquiries(@RequestParam("userId") Long userId) throws NoUserException {
+    public ResponseEntity<List<InquiryResponseDto>> getInquiriesByUserId(@RequestParam("userId") Long userId) throws NoUserException {
         return ResponseEntity.ok(inquiryService.getInquiriesByUserId(userId));
+    }
+
+    @GetMapping("/detail/{id}")
+    public ResponseEntity<InquiryResponseDto> getInquiriesById(@PathVariable("id") Long id) throws NoInquiryIdException {
+        return ResponseEntity.ok(inquiryService.getInquiresById(id));
     }
 
     @GetMapping("/admin")

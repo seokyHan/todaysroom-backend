@@ -161,7 +161,7 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<UserTokenInfoDto> socialUserSignUp() throws Exception{
+    public ResponseEntity<UserTokenInfoDto> socialUserSignUp() throws AuthorityNotFoundException{
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         String accessToken = tokenProvider.oAuth2CreateAccessToken(email, Role.USER);
         String refreshToken = tokenProvider.oAuth2CreateRefreshToken(email, Role.USER);
@@ -169,12 +169,16 @@ public class UserService {
         UserEntity userEntity = userRepository.findByUserEmail(email);
         userEntity.socialUserUpdate(Role.USER);
 
-        Authority authority = authorityRepository.findById(2L).orElseThrow(Exception::new);
+        Authority authority = authorityRepository.findById(2L).orElseThrow(AuthorityNotFoundException::new);
         UserAuthority userAuthority = userAuthorityRepository.findByUserEntity(userEntity);
         userAuthority.authUpdate(authority);
 
         userAuthorityRepository.save(userAuthority);
         userRepository.save(userEntity);
+
+        List<String> userAuthorities = userEntity.getAuthorities().stream()
+                .map(auth -> auth.getAuth().getAuthorityName())
+                .collect(Collectors.toList());
 
         UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.builder()
                 .accessToken(accessToken)
@@ -183,6 +187,7 @@ public class UserService {
                 .userEmail(userEntity.getUserEmail())
                 .userName(userEntity.getUserName())
                 .nickname(userEntity.getNickname())
+                .authorities(userAuthorities)
                 .build();
 
         redisTemplate.opsForValue()
@@ -195,7 +200,7 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity signup(UserSignupDto userSignupDto) throws Exception {
+    public ResponseEntity signup(UserSignupDto userSignupDto) throws AuthorityNotFoundException {
         if(!validateDuplicatedEmail(userSignupDto.userEmail())){
             throw new DuplicatedEmailException();
         }

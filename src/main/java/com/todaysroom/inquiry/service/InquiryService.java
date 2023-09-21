@@ -1,9 +1,8 @@
 package com.todaysroom.inquiry.service;
 
-import com.todaysroom.common.file.dto.UserFileDto;
-import com.todaysroom.common.file.entity.Files;
+import com.todaysroom.common.file.dto.UserFileRequestDto;
+import com.todaysroom.common.file.entity.FilesLocation;
 import com.todaysroom.common.file.entity.UserFiles;
-import com.todaysroom.common.file.repository.FilesRepository;
 import com.todaysroom.common.file.repository.UserFilesRepository;
 import com.todaysroom.common.file.service.FileService;
 import com.todaysroom.common.file.exception.FileLocationNotFoundException;
@@ -31,11 +30,9 @@ import java.util.stream.Collectors;
 public class InquiryService {
 
     private final InquiryRepository inquiryRepository;
-    private final FilesRepository filesRepository;
     private final FileService fileService;
     private final InquiryAnswerRepository inquiryAnswerRepository;
     private final UserRepository userRepository;
-    private final UserFilesRepository userFilesRepository;
 
     @Transactional
     public List<InquiryResponseDto> getAllInquiries(){
@@ -52,17 +49,17 @@ public class InquiryService {
         return inquiries.stream().map(InquiryResponseDto::from).collect(Collectors.toList());
     }
 
-    @Transactional InquiryResponseDto getInquiresById(Long id) throws NoInquiryIdException{
+    @Transactional
+    public InquiryResponseDto getInquiresById(Long id) throws NoInquiryIdException{
         Inquiry inquiry = inquiryRepository.findById(id).orElseThrow(NoInquiryIdException::new);
-        Files files = filesRepository.findById(1L).orElseThrow(FileLocationNotFoundException::new);
-        List<UserFiles> fileList = userFilesRepository.findByPostIdAndFileId(inquiry.getId(), files.getId());
+        FilesLocation filesLocation = fileService.findByFileLocationId(1L);
+        List<UserFiles> fileList = fileService.findByPostIdAndFileLocationId(inquiry.getId(), filesLocation.getId());
 
         if(fileList != null || !fileList.isEmpty()) {
-
+            return InquiryResponseDto.of(inquiry, fileList);
         }
 
         return InquiryResponseDto.from(inquiry);
-
     }
 
 
@@ -72,11 +69,11 @@ public class InquiryService {
         Inquiry inquiry = inquiryRepository.save(inquiryRequestDto.toSaveInquiryEntity(userEntity));
 
         if(fileList != null || !fileList.isEmpty()){
-            Files files = filesRepository.findById(1L).orElseThrow(FileLocationNotFoundException::new);
+            FilesLocation filesLocation = fileService.findByFileLocationId(1L);
 
-            UserFileDto userFileDto = UserFileDto.builder()
+            UserFileRequestDto userFileDto = UserFileRequestDto.builder()
                     .postId(inquiry.getId())
-                    .file(files)
+                    .file(filesLocation)
                     .fileList(fileList)
                     .build();
 

@@ -2,9 +2,6 @@ package com.todaysroom.common.file.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.todaysroom.common.BaseTimeEntity;
-import com.todaysroom.inquiry.entity.Inquiry;
-import com.todaysroom.user.entity.Authority;
-import com.todaysroom.user.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -22,9 +19,9 @@ public class UserFiles extends BaseTimeEntity {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "file_location")
+    @JoinColumn(name = "location")
     @JsonBackReference(value = "userFiles-files")
-    private Files file;
+    private FilesLocation file;
 
     private Long postId;
 
@@ -39,7 +36,7 @@ public class UserFiles extends BaseTimeEntity {
     private String contentType;
 
     @Builder
-    public UserFiles(Long id, Files file, Long postId, String originalFilename, String fileName, String filePath, Long fileSize, String contentType) {
+    public UserFiles(Long id, FilesLocation file, Long postId, String originalFilename, String fileName, String filePath, Long fileSize, String contentType) {
         this.id = id;
         this.file = file;
         this.postId = postId;
