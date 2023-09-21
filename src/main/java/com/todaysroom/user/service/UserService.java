@@ -242,7 +242,7 @@ public class UserService {
         log.info("header에서 RTK : {}", rtk);
         Authentication authentication = tokenProvider.getAuthentication(rtk);
         String refreshToken = (String)redisTemplate.opsForValue().get(AuthType.REFRESHTOKEN_KEY.getByItem() + authentication.getName());
-        log.info("redis RTK : {}", rtk);
+
         if(ObjectUtils.isEmpty(refreshToken)){
             log.info("비어있음");
         }
