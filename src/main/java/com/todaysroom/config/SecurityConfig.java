@@ -101,6 +101,6 @@ public class SecurityConfig{
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer(){
-        return (web) -> web.ignoring().requestMatchers("/","/h2-console/**","/favicon.ico");
+        return (web) -> web.ignoring().requestMatchers("/upload-dir/**","/h2-console/**","/favicon.ico");
     }
 }

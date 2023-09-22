@@ -16,7 +16,7 @@ public record InquiryResponseDto(Long id,
                                  String inquiryType,
                                  boolean isComplete,
                                  LocalDateTime createdDate,
-                                 LocalDateTime modifyDate,
+                                 LocalDateTime modifiedDate,
                                  List<InquiryAnswer> inquiryAnswers,
                                  Optional<List<UserFiles>> fileList) {
 

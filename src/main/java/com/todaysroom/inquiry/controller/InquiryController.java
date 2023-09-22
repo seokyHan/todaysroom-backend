@@ -5,10 +5,12 @@ import com.todaysroom.user.exception.NoUserException;
 import com.todaysroom.inquiry.dto.InquiryRequestDto;
 import com.todaysroom.inquiry.dto.InquiryResponseDto;
 import com.todaysroom.inquiry.service.InquiryService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 

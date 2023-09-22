@@ -3,9 +3,7 @@ package com.todaysroom.inquiry.service;
 import com.todaysroom.common.file.dto.UserFileRequestDto;
 import com.todaysroom.common.file.entity.FilesLocation;
 import com.todaysroom.common.file.entity.UserFiles;
-import com.todaysroom.common.file.repository.UserFilesRepository;
 import com.todaysroom.common.file.service.FileService;
-import com.todaysroom.common.file.exception.FileLocationNotFoundException;
 import com.todaysroom.inquiry.exception.NoInquiryIdException;
 import com.todaysroom.user.exception.NoUserException;
 import com.todaysroom.inquiry.dto.InquiryRequestDto;
@@ -68,7 +66,7 @@ public class InquiryService {
         UserEntity userEntity = userRepository.findById(inquiryRequestDto.userId()).orElseThrow(NoUserException::new);
         Inquiry inquiry = inquiryRepository.save(inquiryRequestDto.toSaveInquiryEntity(userEntity));
 
-        if(fileList != null || !fileList.isEmpty()){
+        if(fileList != null && !fileList.isEmpty()){
             FilesLocation filesLocation = fileService.findByFileLocationId(1L);
 
             UserFileRequestDto userFileDto = UserFileRequestDto.builder()
