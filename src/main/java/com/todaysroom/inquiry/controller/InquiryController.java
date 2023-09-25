@@ -1,5 +1,6 @@
 package com.todaysroom.inquiry.controller;
 
+import com.todaysroom.inquiry.dto.InquiryUpdateDto;
 import com.todaysroom.inquiry.exception.NoInquiryIdException;
 import com.todaysroom.user.exception.NoUserException;
 import com.todaysroom.inquiry.dto.InquiryRequestDto;
@@ -8,6 +9,7 @@ import com.todaysroom.inquiry.service.InquiryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -40,12 +42,18 @@ public class InquiryController {
         return ResponseEntity.ok(inquiryService.getAllInquiries());
     }
 
-    @PostMapping(value ="/create")
-    public ResponseEntity<String> save(@RequestPart(value = "inquiryRequestDto") InquiryRequestDto inquiryRequestDto,
+    @PostMapping("/create")
+    public ResponseEntity<String> create(@RequestPart(value = "inquiryRequestDto") InquiryRequestDto inquiryRequestDto,
                                        @RequestPart(value = "fileList", required = false) List<MultipartFile> fileList) throws NoUserException {
 
-        InquiryResponseDto postResponseDto = inquiryService.create(inquiryRequestDto, fileList);
+        InquiryResponseDto postResponseDto = inquiryService.save(inquiryRequestDto, fileList);
         return ResponseEntity.created(URI.create("/" + postResponseDto.id())).build();
 
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<String> modify(@RequestPart(value = "InquiryUpdateDto") InquiryUpdateDto InquiryUpdateDto,
+                                         @RequestPart(value = "fileList", required = false) List<MultipartFile> fileList) throws NoInquiryIdException {
+        return new ResponseEntity<>("id :" + inquiryService.update(InquiryUpdateDto, fileList) + " 수정완료", HttpStatus.OK);
     }
 }

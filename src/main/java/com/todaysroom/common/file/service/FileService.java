@@ -67,7 +67,7 @@ public class FileService {
         }
 
         for(MultipartFile file : userFileDto.fileList()){
-            saveFile(file, userFileDto);
+                saveFile(file, userFileDto);
         }
     }
 
@@ -123,6 +123,5 @@ public class FileService {
             e.printStackTrace();
             throw new FailedStoreFileException();
         }
-
     }
 }

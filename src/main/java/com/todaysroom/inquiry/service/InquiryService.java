@@ -4,6 +4,7 @@ import com.todaysroom.common.file.dto.UserFileRequestDto;
 import com.todaysroom.common.file.entity.FilesLocation;
 import com.todaysroom.common.file.entity.UserFiles;
 import com.todaysroom.common.file.service.FileService;
+import com.todaysroom.inquiry.dto.InquiryUpdateDto;
 import com.todaysroom.inquiry.exception.NoInquiryIdException;
 import com.todaysroom.user.exception.NoUserException;
 import com.todaysroom.inquiry.dto.InquiryRequestDto;
@@ -62,7 +63,7 @@ public class InquiryService {
 
 
     @Transactional
-    public InquiryResponseDto create(InquiryRequestDto inquiryRequestDto, List<MultipartFile> fileList) throws NoUserException {
+    public InquiryResponseDto save(InquiryRequestDto inquiryRequestDto, List<MultipartFile> fileList) throws NoUserException {
         UserEntity userEntity = userRepository.findById(inquiryRequestDto.userId()).orElseThrow(NoUserException::new);
         Inquiry inquiry = inquiryRepository.save(inquiryRequestDto.toSaveInquiryEntity(userEntity));
 
@@ -79,5 +80,25 @@ public class InquiryService {
         }
 
         return InquiryResponseDto.from(inquiry);
+    }
+
+    @Transactional
+    public Long update(InquiryUpdateDto inquiryUpdateDto, List<MultipartFile> fileList) throws  NoInquiryIdException{
+        Inquiry originInquiry = inquiryRepository.findById(inquiryUpdateDto.id()).orElseThrow(NoInquiryIdException::new);
+        originInquiry.updateInquiry(inquiryUpdateDto);
+
+        if(fileList != null && !fileList.isEmpty()){
+            FilesLocation filesLocation = fileService.findByFileLocationId(1L);
+
+            UserFileRequestDto userFileDto = UserFileRequestDto.builder()
+                    .postId(originInquiry.getId())
+                    .file(filesLocation)
+                    .fileList(fileList)
+                    .build();
+
+            fileService.saveFiles(userFileDto);
+        }
+
+        return originInquiry.getId();
     }
 }
