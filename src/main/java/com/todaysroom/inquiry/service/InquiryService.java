@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -86,6 +87,7 @@ public class InquiryService {
     public Long update(InquiryUpdateDto inquiryUpdateDto, List<MultipartFile> fileList) throws  NoInquiryIdException{
         Inquiry originInquiry = inquiryRepository.findById(inquiryUpdateDto.id()).orElseThrow(NoInquiryIdException::new);
         originInquiry.updateInquiry(inquiryUpdateDto);
+        fileService.deleteByFileId(inquiryUpdateDto.deleteFileList());
 
         if(fileList != null && !fileList.isEmpty()){
             FilesLocation filesLocation = fileService.findByFileLocationId(1L);
@@ -100,5 +102,18 @@ public class InquiryService {
         }
 
         return originInquiry.getId();
+    }
+
+    @Transactional
+    public void delete(Long id) throws  NoInquiryIdException{
+        Inquiry inquiry = inquiryRepository.findById(id).orElseThrow(NoInquiryIdException::new);
+        inquiryRepository.deleteById(inquiry.getId());
+
+        FilesLocation filesLocation = fileService.findByFileLocationId(1L);
+        List<UserFiles> fileList = fileService.findByPostIdAndFileLocationId(inquiry.getId(), filesLocation.getId());
+
+        if(fileList != null && !fileList.isEmpty()){
+            fileService.deleteByFileId(fileList);
+        }
     }
 }

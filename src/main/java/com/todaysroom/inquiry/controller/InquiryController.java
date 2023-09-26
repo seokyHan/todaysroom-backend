@@ -52,8 +52,15 @@ public class InquiryController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<String> modify(@RequestPart(value = "InquiryUpdateDto") InquiryUpdateDto InquiryUpdateDto,
+    public ResponseEntity<String> modify(@RequestPart(value = "inquiryUpdateDto") InquiryUpdateDto inquiryUpdateDto,
                                          @RequestPart(value = "fileList", required = false) List<MultipartFile> fileList) throws NoInquiryIdException {
-        return new ResponseEntity<>("id :" + inquiryService.update(InquiryUpdateDto, fileList) + " 수정완료", HttpStatus.OK);
+        return new ResponseEntity<>("id :" + inquiryService.update(inquiryUpdateDto, fileList) + " 수정완료", HttpStatus.OK);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> remove(@PathVariable("id") Long id) throws NoInquiryIdException {
+        inquiryService.delete(id);
+
+        return new ResponseEntity<>("id :" + id + " 삭제 완료", HttpStatus.NO_CONTENT);
     }
 }

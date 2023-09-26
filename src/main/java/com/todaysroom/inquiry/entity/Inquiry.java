@@ -46,7 +46,7 @@ public class Inquiry extends BaseTimeEntity {
 
 
     public void updateInquiry(InquiryUpdateDto inquiryUpdateDto){
-        this.inquiryType = inquiryUpdateDto.InquiryType();
+        this.inquiryType = inquiryUpdateDto.inquiryType();
         this.title = inquiryUpdateDto.title();
         this.content = inquiryUpdateDto.content();
     }

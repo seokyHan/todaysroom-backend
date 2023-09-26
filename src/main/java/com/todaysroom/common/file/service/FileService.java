@@ -72,20 +72,6 @@ public class FileService {
     }
 
     @Transactional
-    public FilesLocation findByFileLocationId(Long id){
-        FilesLocation filesLocation = filesRepository.findById(id).orElseThrow(FileLocationNotFoundException::new);
-
-        return filesLocation;
-    }
-
-    @Transactional
-    public List<UserFiles> findByPostIdAndFileLocationId(Long postId, Long fileLocationId){
-        List<UserFiles> fileList = userFilesRepository.findByPostIdAndFileId(postId, fileLocationId);
-
-        return fileList;
-    }
-
-    @Transactional
     public void saveFile(MultipartFile file, UserFileRequestDto userFileDto){
         try{
             String fileName = UUID.randomUUID()+"$$";
@@ -124,4 +110,53 @@ public class FileService {
             throw new FailedStoreFileException();
         }
     }
+
+//    @Transactional
+//    public void deleteByFileId(List<Long> deleteFileList){
+//        if(deleteFileList == null || deleteFileList.isEmpty()){
+//            return;
+//        }
+//        for(Long id : deleteFileList){
+//            userFilesRepository.deleteById(id);
+//        }
+//    }
+//
+//    @Transactional
+//    public void deleteByUserFiles(List<UserFiles> deleteFileList){
+//        if(deleteFileList == null || deleteFileList.isEmpty()){
+//            return;
+//        }
+//        for(UserFiles userFiles : deleteFileList){
+//            userFilesRepository.deleteById(userFiles.getId());
+//        }
+//    }
+
+    @Transactional
+    public <T> void deleteByFileId(List<T> entities) {
+        if (entities != null && !entities.isEmpty()) {
+            for (T entity : entities) {
+                if (entity instanceof UserFiles) {
+                    userFilesRepository.deleteById(((UserFiles) entity).getId());
+                } else if (entity instanceof Long) {
+                    userFilesRepository.deleteById(((Long) entity));
+                }
+            }
+        }
+    }
+
+    @Transactional
+    public FilesLocation findByFileLocationId(Long id){
+        FilesLocation filesLocation = filesRepository.findById(id).orElseThrow(FileLocationNotFoundException::new);
+
+        return filesLocation;
+    }
+
+    @Transactional
+    public List<UserFiles> findByPostIdAndFileLocationId(Long postId, Long fileLocationId){
+        List<UserFiles> fileList = userFilesRepository.findByPostIdAndFileId(postId, fileLocationId);
+
+        return fileList;
+    }
+
+
 }
