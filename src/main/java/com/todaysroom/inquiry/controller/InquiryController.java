@@ -1,6 +1,8 @@
 package com.todaysroom.inquiry.controller;
 
+import com.todaysroom.inquiry.dto.InquiryAnswerDto;
 import com.todaysroom.inquiry.dto.InquiryUpdateDto;
+import com.todaysroom.inquiry.exception.NoInquiryAnswerIdException;
 import com.todaysroom.inquiry.exception.NoInquiryIdException;
 import com.todaysroom.user.exception.NoUserException;
 import com.todaysroom.inquiry.dto.InquiryRequestDto;
@@ -63,4 +65,17 @@ public class InquiryController {
 
         return new ResponseEntity<>("id :" + id + " 삭제 완료", HttpStatus.NO_CONTENT);
     }
+
+    @PostMapping("/answer")
+    public ResponseEntity<String> inquiryAnswerSave(@RequestBody InquiryAnswerDto inquiryAnswerDto) throws NoInquiryIdException{
+
+        return ResponseEntity.ok("Inquiry Answer ID : " + inquiryService.answerSave(inquiryAnswerDto) + " 답변 저장 완료");
+    }
+
+    @DeleteMapping("/answer")
+    public ResponseEntity<String> inquiryAnswerDelete(@RequestParam("id") Long id, @RequestParam("inquiryId") Long inquiryId) throws NoInquiryAnswerIdException, NoInquiryIdException{
+
+        return ResponseEntity.ok("Inquiry Answer ID : " + inquiryService.answerDelete(id, inquiryId) + " 답변 삭제 완료");
+    }
+
 }

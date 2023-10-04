@@ -4,7 +4,10 @@ import com.todaysroom.common.file.dto.UserFileRequestDto;
 import com.todaysroom.common.file.entity.FilesLocation;
 import com.todaysroom.common.file.entity.UserFiles;
 import com.todaysroom.common.file.service.FileService;
+import com.todaysroom.inquiry.dto.InquiryAnswerDto;
 import com.todaysroom.inquiry.dto.InquiryUpdateDto;
+import com.todaysroom.inquiry.entity.InquiryAnswer;
+import com.todaysroom.inquiry.exception.NoInquiryAnswerIdException;
 import com.todaysroom.inquiry.exception.NoInquiryIdException;
 import com.todaysroom.user.exception.NoUserException;
 import com.todaysroom.inquiry.dto.InquiryRequestDto;
@@ -69,15 +72,7 @@ public class InquiryService {
         Inquiry inquiry = inquiryRepository.save(inquiryRequestDto.toSaveInquiryEntity(userEntity));
 
         if(fileList != null && !fileList.isEmpty()){
-            FilesLocation filesLocation = fileService.findByFileLocationId(1L);
-
-            UserFileRequestDto userFileDto = UserFileRequestDto.builder()
-                    .postId(inquiry.getId())
-                    .file(filesLocation)
-                    .fileList(fileList)
-                    .build();
-
-            fileService.saveFiles(userFileDto);
+            fileSave(inquiry, fileList);
         }
 
         return InquiryResponseDto.from(inquiry);
@@ -90,22 +85,14 @@ public class InquiryService {
         fileService.deleteByFileId(inquiryUpdateDto.deleteFileList());
 
         if(fileList != null && !fileList.isEmpty()){
-            FilesLocation filesLocation = fileService.findByFileLocationId(1L);
-
-            UserFileRequestDto userFileDto = UserFileRequestDto.builder()
-                    .postId(originInquiry.getId())
-                    .file(filesLocation)
-                    .fileList(fileList)
-                    .build();
-
-            fileService.saveFiles(userFileDto);
+            fileSave(originInquiry, fileList);
         }
 
         return originInquiry.getId();
     }
 
     @Transactional
-    public void delete(Long id) throws  NoInquiryIdException{
+    public void delete(Long id) throws NoInquiryIdException{
         Inquiry inquiry = inquiryRepository.findById(id).orElseThrow(NoInquiryIdException::new);
         inquiryRepository.deleteById(inquiry.getId());
 
@@ -115,5 +102,45 @@ public class InquiryService {
         if(fileList != null && !fileList.isEmpty()){
             fileService.deleteByFileId(fileList);
         }
+    }
+
+    @Transactional
+    public Long answerSave(InquiryAnswerDto inquiryAnswerDto) throws NoInquiryIdException{
+        Inquiry inquiry = inquiryRepository.findById(inquiryAnswerDto.inquiryId()).orElseThrow(NoInquiryIdException::new);
+        InquiryAnswer inquiryAnswer = inquiryAnswerRepository.save(inquiryAnswerDto.toSaveInquiryAnswerEntity(inquiry));
+        isCompleteInquiryUpdate(inquiry.getId(), true);
+
+        return inquiryAnswer.getId();
+    }
+
+    @Transactional
+    public Long answerDelete(Long id, Long inquiryId) throws NoInquiryAnswerIdException, NoInquiryIdException{
+        InquiryAnswer inquiryAnswer = inquiryAnswerRepository.findById(id).orElseThrow(NoInquiryAnswerIdException::new);
+        inquiryAnswerRepository.deleteById(id);
+
+        Inquiry originInquiry = inquiryRepository.findById(inquiryId).orElseThrow(NoInquiryIdException::new);
+        if(originInquiry.getInquiryAnswer().size() == 1){
+            isCompleteInquiryUpdate(inquiryId, false);
+        }
+
+        return inquiryAnswer.getId();
+    }
+
+    @Transactional
+    public void isCompleteInquiryUpdate(Long id, Boolean isComplete) throws NoInquiryIdException{
+        Inquiry originInquiry = inquiryRepository.findById(id).orElseThrow(NoInquiryIdException::new);
+        originInquiry.isCompleteInquiryUpdate(isComplete);
+    }
+
+    private void fileSave(Inquiry inquiry, List<MultipartFile> fileList){
+        FilesLocation filesLocation = fileService.findByFileLocationId(1L);
+
+        UserFileRequestDto userFileDto = UserFileRequestDto.builder()
+                .postId(inquiry.getId())
+                .file(filesLocation)
+                .fileList(fileList)
+                .build();
+
+        fileService.saveFiles(userFileDto);
     }
 }
