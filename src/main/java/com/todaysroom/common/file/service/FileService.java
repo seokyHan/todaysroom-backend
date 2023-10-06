@@ -111,26 +111,6 @@ public class FileService {
         }
     }
 
-//    @Transactional
-//    public void deleteByFileId(List<Long> deleteFileList){
-//        if(deleteFileList == null || deleteFileList.isEmpty()){
-//            return;
-//        }
-//        for(Long id : deleteFileList){
-//            userFilesRepository.deleteById(id);
-//        }
-//    }
-//
-//    @Transactional
-//    public void deleteByUserFiles(List<UserFiles> deleteFileList){
-//        if(deleteFileList == null || deleteFileList.isEmpty()){
-//            return;
-//        }
-//        for(UserFiles userFiles : deleteFileList){
-//            userFilesRepository.deleteById(userFiles.getId());
-//        }
-//    }
-
     @Transactional
     public <T> void deleteByFileId(List<T> entities) {
         if (entities != null && !entities.isEmpty()) {
