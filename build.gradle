@@ -28,6 +28,9 @@ dependencies {
 	//redis
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-redis'
 
+	//jsoup
+	implementation 'org.jsoup:jsoup:1.15.4'
+
 	//security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	// jwt

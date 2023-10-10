@@ -84,6 +84,7 @@ public class SecurityConfig{
                 .requestMatchers("/users/login").permitAll()
                 .requestMatchers("/users/signup").permitAll()
                 .requestMatchers("/users/reissue").permitAll()
+                .requestMatchers("/news").permitAll()
 
                 .anyRequest().authenticated()
                 .and()
