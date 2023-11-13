@@ -1,4 +1,4 @@
-package com.todaysroom.config;
+package com.todaysroom.global.config;
 
 import com.todaysroom.oauth2.handler.OAuth2LoginFailureHandler;
 import com.todaysroom.oauth2.handler.OAuth2LoginSuccessHandler;
