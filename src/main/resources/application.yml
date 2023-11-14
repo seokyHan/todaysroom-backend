@@ -92,6 +92,11 @@ oauth:
 file:
   directory-path: src/main/resources/static/upload-dir
 
+housedeal:
+  api:
+    host: http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev
+    secret: pCdkSDANrV7zkQGjPViu1HLx4nhmwFVntCq9+SjMfyHXgRsEPzteAp5etq0sh3bRM8ZTPCb2RHmAvz5qY3kRBg==
+
 # Log
 logging:
   level:
