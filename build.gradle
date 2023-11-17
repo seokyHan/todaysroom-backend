@@ -21,6 +21,7 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation group: 'org.json', name: 'json', version: '20160810'
 
 	//validation
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -41,9 +42,13 @@ dependencies {
 	//oauth2
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
+	//RestTemplate에 retryTemplate(재시도) 추가
+	implementation 'org.springframework.retry:spring-retry:1.2.5.RELEASE'
+
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 	annotationProcessor 'org.projectlombok:lombok'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
