@@ -1,7 +1,7 @@
-package com.todaysroom.common.file.entity;
+package com.todaysroom.file.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.todaysroom.common.BaseTimeEntity;
+import com.todaysroom.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

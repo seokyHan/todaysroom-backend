@@ -1,4 +1,4 @@
-package com.todaysroom.common.file.entity;
+package com.todaysroom.file.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
