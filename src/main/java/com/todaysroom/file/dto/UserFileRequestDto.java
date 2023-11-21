@@ -1,7 +1,7 @@
-package com.todaysroom.common.file.dto;
+package com.todaysroom.file.dto;
 
-import com.todaysroom.common.file.entity.FilesLocation;
-import com.todaysroom.common.file.entity.UserFiles;
+import com.todaysroom.file.entity.FilesLocation;
+import com.todaysroom.file.entity.UserFiles;
 import lombok.Builder;
 import org.springframework.web.multipart.MultipartFile;
 

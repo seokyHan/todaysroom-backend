@@ -1,4 +1,4 @@
-package com.todaysroom.common.file.dto;
+package com.todaysroom.file.dto;
 
 public record UserFileReponseDto() {
 }
