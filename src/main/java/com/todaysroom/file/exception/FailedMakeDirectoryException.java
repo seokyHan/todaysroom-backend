@@ -1,4 +1,4 @@
-package com.todaysroom.common.file.exception;
+package com.todaysroom.file.exception;
 
 public class FailedMakeDirectoryException extends RuntimeException{
     public FailedMakeDirectoryException() {
