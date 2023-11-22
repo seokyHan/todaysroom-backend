@@ -2,7 +2,7 @@ package com.todaysroom.user.service;
 
 
 import com.todaysroom.oauth2.exception.AuthorityNotFoundException;
-import com.todaysroom.types.Role;
+import com.todaysroom.global.types.Role;
 import com.todaysroom.user.dto.UserLoginDto;
 import com.todaysroom.user.dto.UserSignupDto;
 import com.todaysroom.user.dto.UserTokenInfoDto;
@@ -16,8 +16,7 @@ import com.todaysroom.user.jwt.TokenProvider;
 import com.todaysroom.user.repository.AuthorityRepository;
 import com.todaysroom.user.repository.UserAuthorityRepository;
 import com.todaysroom.user.repository.UserRepository;
-import com.todaysroom.types.AuthType;
-import com.todaysroom.types.ErrorCode;
+import com.todaysroom.global.types.AuthType;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
