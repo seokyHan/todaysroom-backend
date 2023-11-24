@@ -1,6 +1,6 @@
-package com.todaysroom.common.file.repository;
+package com.todaysroom.file.repository;
 
-import com.todaysroom.common.file.entity.UserFiles;
+import com.todaysroom.file.entity.UserFiles;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
