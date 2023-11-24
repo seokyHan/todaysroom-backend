@@ -1,13 +1,13 @@
-package com.todaysroom.common.file.service;
+package com.todaysroom.file.service;
 
-import com.todaysroom.common.file.dto.UserFileRequestDto;
-import com.todaysroom.common.file.entity.FilesLocation;
-import com.todaysroom.common.file.entity.UserFiles;
-import com.todaysroom.common.file.exception.FailedMakeDirectoryException;
-import com.todaysroom.common.file.exception.FailedStoreFileException;
-import com.todaysroom.common.file.exception.FileLocationNotFoundException;
-import com.todaysroom.common.file.repository.FilesRepository;
-import com.todaysroom.common.file.repository.UserFilesRepository;
+import com.todaysroom.file.dto.UserFileRequestDto;
+import com.todaysroom.file.entity.FilesLocation;
+import com.todaysroom.file.entity.UserFiles;
+import com.todaysroom.file.exception.FailedMakeDirectoryException;
+import com.todaysroom.file.exception.FailedStoreFileException;
+import com.todaysroom.file.exception.FileLocationNotFoundException;
+import com.todaysroom.file.repository.FilesRepository;
+import com.todaysroom.file.repository.UserFilesRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
