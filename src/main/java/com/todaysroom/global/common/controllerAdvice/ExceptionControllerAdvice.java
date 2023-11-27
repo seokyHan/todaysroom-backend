@@ -1,8 +1,8 @@
-package com.todaysroom.common.controllerAdvice;
+package com.todaysroom.global.common.controllerAdvice;
 
-import com.todaysroom.common.ErrorResponse;
-import com.todaysroom.common.file.exception.FailedMakeDirectoryException;
-import com.todaysroom.common.file.exception.FailedStoreFileException;
+import com.todaysroom.global.common.ErrorResponse;
+import com.todaysroom.file.exception.FailedMakeDirectoryException;
+import com.todaysroom.file.exception.FailedStoreFileException;
 import com.todaysroom.inquiry.exception.NoInquiryIdException;
 import com.todaysroom.oauth2.exception.AuthorityNotFoundException;
 import com.todaysroom.user.exception.DuplicatedEmailException;
