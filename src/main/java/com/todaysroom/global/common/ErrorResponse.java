@@ -1,4 +1,4 @@
-package com.todaysroom.common;
+package com.todaysroom.global.common;
 
 import lombok.AccessLevel;
 import lombok.Getter;
