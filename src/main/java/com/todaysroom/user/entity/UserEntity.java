@@ -1,11 +1,10 @@
 package com.todaysroom.user.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.todaysroom.common.BaseTimeEntity;
-import com.todaysroom.common.file.entity.UserFiles;
+import com.todaysroom.global.common.BaseTimeEntity;
 import com.todaysroom.inquiry.entity.Inquiry;
-import com.todaysroom.types.Role;
-import com.todaysroom.types.SocialType;
+import com.todaysroom.global.types.Role;
+import com.todaysroom.global.types.SocialType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
