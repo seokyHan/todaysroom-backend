@@ -9,6 +9,9 @@ spring:
     username: sseok
     password: sseok1979
 
+  messages:
+    basename: messages/messages
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -96,6 +99,11 @@ housedeal:
   api:
     host: http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev
     secret: pCdkSDANrV7zkQGjPViu1HLx4nhmwFVntCq9+SjMfyHXgRsEPzteAp5etq0sh3bRM8ZTPCb2RHmAvz5qY3kRBg==
+
+kakao:
+  api:
+    host: https://dapi.kakao.com/v2/local/search/address.json
+    secret: 6f3ec3c70b15ed635ba3c7f0cc46ae82
 
 # Log
 logging:
