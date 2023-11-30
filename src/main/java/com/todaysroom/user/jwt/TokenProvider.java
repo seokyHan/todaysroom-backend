@@ -1,8 +1,8 @@
 package com.todaysroom.user.jwt;
 
-import com.todaysroom.types.Role;
+import com.todaysroom.global.types.Role;
 import com.todaysroom.user.dto.UserTokenInfoDto;
-import com.todaysroom.types.AuthType;
+import com.todaysroom.global.types.AuthType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
