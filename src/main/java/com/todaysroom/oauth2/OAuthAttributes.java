@@ -4,14 +4,13 @@ import com.todaysroom.oauth2.userInfo.GoogleOAuth2UserInfo;
 import com.todaysroom.oauth2.userInfo.KakaoOAuth2UserInfo;
 import com.todaysroom.oauth2.userInfo.NaverOAuth2UserInfo;
 import com.todaysroom.oauth2.userInfo.OAuth2UserInfo;
-import com.todaysroom.types.Role;
-import com.todaysroom.types.SocialType;
+import com.todaysroom.global.types.Role;
+import com.todaysroom.global.types.SocialType;
 import com.todaysroom.user.entity.Authority;
 import com.todaysroom.user.entity.UserAuthority;
 import com.todaysroom.user.entity.UserEntity;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.UUID;
