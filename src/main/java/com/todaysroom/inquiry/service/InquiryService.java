@@ -1,9 +1,9 @@
 package com.todaysroom.inquiry.service;
 
-import com.todaysroom.common.file.dto.UserFileRequestDto;
-import com.todaysroom.common.file.entity.FilesLocation;
-import com.todaysroom.common.file.entity.UserFiles;
-import com.todaysroom.common.file.service.FileService;
+import com.todaysroom.file.dto.UserFileRequestDto;
+import com.todaysroom.file.entity.FilesLocation;
+import com.todaysroom.file.entity.UserFiles;
+import com.todaysroom.file.service.FileService;
 import com.todaysroom.inquiry.dto.InquiryAnswerDto;
 import com.todaysroom.inquiry.dto.InquiryUpdateDto;
 import com.todaysroom.inquiry.entity.InquiryAnswer;
@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
