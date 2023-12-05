@@ -1,7 +1,5 @@
 package com.todaysroom.oauth2.userInfo;
 
-import com.todaysroom.types.ErrorCode;
-
 import java.util.Map;
 
 public class KakaoOAuth2UserInfo extends OAuth2UserInfo{
