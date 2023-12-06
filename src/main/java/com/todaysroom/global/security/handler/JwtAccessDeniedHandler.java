@@ -1,4 +1,4 @@
-package com.todaysroom.user.jwt;
+package com.todaysroom.global.security.handler;
 
 import com.todaysroom.global.exception.Message;
 import jakarta.servlet.ServletException;
