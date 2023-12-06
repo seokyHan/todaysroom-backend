@@ -1,4 +1,4 @@
-package com.todaysroom.global.config;
+package com.todaysroom.global.security;
 
 import com.todaysroom.oauth2.handler.OAuth2LoginFailureHandler;
 import com.todaysroom.oauth2.handler.OAuth2LoginSuccessHandler;
@@ -7,17 +7,23 @@ import com.todaysroom.user.jwt.JwtAccessDeniedHandler;
 import com.todaysroom.user.jwt.JwtAuthenticationEntryPoint;
 import com.todaysroom.user.jwt.JwtSecurityConfig;
 import com.todaysroom.user.jwt.TokenProvider;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authorization.AuthorityAuthorizationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -25,6 +31,12 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 
 import java.util.Arrays;
 import java.util.List;
+
+import static java.util.Arrays.stream;
+import static org.springframework.http.HttpMethod.*;
+import static org.springframework.http.HttpMethod.PUT;
+import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -36,6 +48,16 @@ public class SecurityConfig{
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
+
+    private static final String[] WHITE_LIST = {
+            "/users/signup",
+            "/users/email-check",
+            "/users/login",
+            "/users/signup",
+            "/users/reissue",
+            "/news",
+            "/map/getHouseInfo",
+    };
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -59,34 +81,31 @@ public class SecurityConfig{
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain config(HttpSecurity http) throws Exception {
+        AuthorityAuthorizationManager<RequestAuthorizationContext> user = AuthorityAuthorizationManager.hasAuthority("ROLE_USER");
+        AuthorityAuthorizationManager<RequestAuthorizationContext> admin = AuthorityAuthorizationManager.hasAuthority("ROLE_ADMIN");
+        AntPathRequestMatcher[] antPathRequestMatchers = stream(WHITE_LIST).map(AntPathRequestMatcher::antMatcher).toArray(AntPathRequestMatcher[]::new);
+
         http.formLogin().disable()
                 .httpBasic().disable()
                 .cors().configurationSource(corsConfigurationSource()).and()
-                .csrf().disable()
-                .exceptionHandling()
-                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                .accessDeniedHandler(jwtAccessDeniedHandler)
-
-                .and()
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth ->
+                        auth
+                                .requestMatchers(antPathRequestMatchers).permitAll()
+                                .requestMatchers(getUserMatchers()).access(user)
+                                .requestMatchers(getAdminMatcher()).access(admin)
+                                .anyRequest()
+                                .denyAll()
+                )
+                .exceptionHandling(exceptionHandling ->
+                    exceptionHandling.accessDeniedHandler(jwtAccessDeniedHandler)
+                                     .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                )
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers()
                 .frameOptions()
                 .sameOrigin()
-
-                .and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-
-                .and()
-                .authorizeHttpRequests()
-                .requestMatchers("/users/signup").permitAll()
-                .requestMatchers("/users/email-check").permitAll()
-                .requestMatchers("/users/login").permitAll()
-                .requestMatchers("/users/signup").permitAll()
-                .requestMatchers("/users/reissue").permitAll()
-                .requestMatchers("/news").permitAll()
-
-                .anyRequest().authenticated()
                 .and()
                 .apply(new JwtSecurityConfig(tokenProvider))
                 .and()
@@ -99,10 +118,18 @@ public class SecurityConfig{
         return http.build();
     }
 
-
-
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer(){
         return (web) -> web.ignoring().requestMatchers("/upload-dir/**","/h2-console/**","/favicon.ico");
+    }
+
+    @NotNull
+    private RequestMatcher[] getUserMatchers() {
+        return new RequestMatcher[]{antMatcher(POST, "/proxy/**"), antMatcher(GET, "/codes/**"), antMatcher(POST, "/files/**"), antMatcher(POST, "/batch/**")};
+    }
+
+    @NotNull
+    private RequestMatcher[] getAdminMatcher() {
+        return new RequestMatcher[]{antMatcher(PUT, "/subscriptions/*/status"), antMatcher(PUT, "/subscriptions/*/customer")};
     }
 }
