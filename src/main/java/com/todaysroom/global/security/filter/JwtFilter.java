@@ -1,8 +1,10 @@
-package com.todaysroom.user.jwt;
+package com.todaysroom.global.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.todaysroom.global.types.AuthType;
 import com.todaysroom.user.dto.ResponseDto;
 import com.todaysroom.global.types.ErrorCode;
+import com.todaysroom.global.security.jwt.TokenProvider;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,6 +19,14 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+import static com.todaysroom.global.security.config.SecurityConfig.WHITE_LIST;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,31 +38,39 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String jwt = tokenProvider.resolveToken(request);
+        String contextPath = request.getContextPath();
         String requestURI = request.getRequestURI();
 
-        try{
-            // 토큰 유효성 체크
-            if(StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)){
-                if(!requestURI.equals("/users/reissue")){
-                    Authentication authentication = tokenProvider.getAuthentication(jwt);
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                    log.debug("Security Context에 '{}' 인증 정보를 저장했습니다, uri: {}", authentication.getName(), requestURI);
-                }
+        if(!isWhitePath(contextPath, requestURI)) {
+            String token = resolveToken(request);
+            if(!tokenProvider.validateToken(token)){
+                return;
             }
-            filterChain.doFilter(request, response);
-        }catch (ExpiredJwtException e){
-            ResponseDto responseDto = ResponseDto.builder().
-                    status(ErrorCode.JWT_ACCESS_TOKEN_EXPIRED.getStatus()).
-                    message(ErrorCode.JWT_ACCESS_TOKEN_EXPIRED.getMessage()).
-                    code(ErrorCode.JWT_ACCESS_TOKEN_EXPIRED.getCode())
-                    .build();
-
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.getWriter().write(new ObjectMapper().writeValueAsString(responseDto));
-            response.getWriter().flush();
+            userAuthFilter(token);
+            log.debug("Security Context에 '{}' 인증 정보를 저장했습니다, uri: {}", SecurityContextHolder.getContext().getAuthentication().getName(), requestURI);
         }
 
+        filterChain.doFilter(request, response);
+    }
+
+    private void userAuthFilter(String token){
+        Authentication authentication = tokenProvider.getAuthentication(token);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader(AUTHORIZATION);
+        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith(AuthType.TOKEN_HEADER.getByItem())){
+            return bearerToken.substring(AuthType.TOKEN_HEADER.getByItem().length());
+        }
+
+        return null;
+    }
+
+    private boolean isWhitePath(String contextPath, String requestURI){
+        Stream<String> stream = Arrays.stream(WHITE_LIST);
+
+        return stream.anyMatch(req -> equalsIgnoreCase(requestURI, format("%s%s", contextPath, req)));
     }
 
 }
