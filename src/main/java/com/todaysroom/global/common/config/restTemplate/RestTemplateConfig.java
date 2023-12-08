@@ -1,4 +1,4 @@
-package com.todaysroom.global.config.restTemplate;
+package com.todaysroom.global.common.config.restTemplate;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
