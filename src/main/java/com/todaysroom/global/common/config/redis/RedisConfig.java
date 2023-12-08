@@ -1,4 +1,4 @@
-package com.todaysroom.global.config.redis;
+package com.todaysroom.global.common.config.redis;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
