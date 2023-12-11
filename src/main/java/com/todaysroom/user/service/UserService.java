@@ -98,8 +98,8 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<UserTokenInfoDto> reissue(HttpServletRequest request) {
-        String headerCookie = request.getHeader(REISSUE_HEADER.getByItem());
-        int start = headerCookie.indexOf(HEADER_VALUE.getByItem()) + HEADER_VALUE.getByItem().length();
+        String headerCookie = request.getHeader(REISSUE_HEADER.getItem());
+        int start = headerCookie.indexOf(HEADER_VALUE.getItem()) + HEADER_VALUE.getItem().length();
         int end = headerCookie.indexOf(";", start);
         String cookieRefreshToken = headerCookie.substring(start,end);
 
@@ -124,7 +124,7 @@ public class UserService {
 
         UserTokenInfoDto userTokenInfoDto = generateUserTokenInfo(authentication, userInfo);
 
-        setTokenInRedis(REFRESHTOKEN_KEY.getByItem() + authentication.getName(),
+        setTokenInRedis(REFRESHTOKEN_KEY.getItem() + authentication.getName(),
                 userTokenInfoDto.refreshToken(),
                 tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
                 TimeUnit.MILLISECONDS);
@@ -150,7 +150,7 @@ public class UserService {
 
         UserTokenInfoDto userTokenInfoDto = generateUserTokenInfo(accessToken, refreshToken, userEntity);
 
-        setTokenInRedis(REFRESHTOKEN_KEY.getByItem() + userTokenInfoDto.userEmail(),
+        setTokenInRedis(REFRESHTOKEN_KEY.getItem() + userTokenInfoDto.userEmail(),
                 userTokenInfoDto.refreshToken(),
                 tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
                 TimeUnit.MILLISECONDS);
@@ -189,7 +189,7 @@ public class UserService {
     }
 
     private ResponseEntity<UserTokenInfoDto> setResponseData(UserTokenInfoDto userTokenInfoDto) {
-        ResponseCookie cookie = ResponseCookie.from(REFRESHTOKEN_KEY.getByItem(), userTokenInfoDto.refreshToken())
+        ResponseCookie cookie = ResponseCookie.from(REFRESHTOKEN_KEY.getItem(), userTokenInfoDto.refreshToken())
                 .maxAge(12096000)
                 .path("/")
                 .secure(true)
