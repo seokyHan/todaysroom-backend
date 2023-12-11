@@ -1,6 +1,6 @@
 package com.todaysroom.oauth2;
 
-import com.todaysroom.types.Role;
+import com.todaysroom.global.types.Role;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;

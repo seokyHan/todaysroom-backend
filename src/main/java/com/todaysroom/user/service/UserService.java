@@ -2,7 +2,6 @@ package com.todaysroom.user.service;
 
 
 import com.todaysroom.global.exception.CustomException;
-import com.todaysroom.oauth2.exception.AuthorityNotFoundException;
 import com.todaysroom.global.types.Role;
 import com.todaysroom.user.dto.UserLoginDto;
 import com.todaysroom.user.dto.UserSignupDto;
@@ -108,18 +107,18 @@ public class UserService {
 
         // Redis 저장된 RefreshToken 찾은 후 없으면 401 에러
         if(ObjectUtils.isEmpty(refreshToken)){
-            throw new CustomException("토큰 정보 미존재", UNAUTHORIZED);
+            throw new CustomException(UNAUTHORIZED, "토큰 정보 미존재");
         }
 
         // RefreshToken이 만료 됐는지
         if (redisTemplate.opsForValue().get(refreshToken) == null) {
-            throw new CustomException("refreshToken 만료", TOKEN_EXPIRED);
+            throw new CustomException(TOKEN_EXPIRED, "refreshToken 만료");
         }
 
         UserEntity userInfo = userRepository.findByUserEmail(authentication.getName());
 
         if (userInfo == null) {
-            throw new CustomException("해당 User를 찾을 수 없습니다.", USER_NOT_FOUND);
+            throw new CustomException(USER_NOT_FOUND, "해당 User를 찾을 수 없습니다.");
         }
 
         UserTokenInfoDto userTokenInfoDto = generateUserTokenInfo(authentication, userInfo);
@@ -133,7 +132,7 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<UserTokenInfoDto> socialUserSignUp() throws AuthorityNotFoundException{
+    public ResponseEntity<UserTokenInfoDto> socialUserSignUp(){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         String accessToken = tokenProvider.oAuth2CreateAccessToken(email, Role.USER);
         String refreshToken = tokenProvider.oAuth2CreateRefreshToken(email, Role.USER);
@@ -141,7 +140,7 @@ public class UserService {
         UserEntity userEntity = userRepository.findByUserEmail(email);
         userEntity.socialUserUpdate(Role.USER);
 
-        Authority authority = authorityRepository.findById(2L).orElseThrow(AuthorityNotFoundException::new);
+        Authority authority = authorityRepository.findById(2L).orElseThrow(() -> new CustomException(UNAUTHORIZED, "권한이 존재하지 않습니다."));
         UserAuthority userAuthority = userAuthorityRepository.findByUserEntity(userEntity);
         userAuthority.authUpdate(authority);
 
@@ -159,7 +158,7 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity signup(UserSignupDto userSignupDto) throws AuthorityNotFoundException {
+    public ResponseEntity signup(UserSignupDto userSignupDto) {
         UserEntity signupUser = userSignupDto.toUserEntity();
 
         UserEntity userEntity = UserEntity.builder()
@@ -170,7 +169,7 @@ public class UserService {
                 .nickname(signupUser.getNickname())
                 .build();
 
-        Authority authority = authorityRepository.findById(2L).orElseThrow(AuthorityNotFoundException::new);
+        Authority authority = authorityRepository.findById(2L).orElseThrow(() -> new CustomException(UNAUTHORIZED, "권한이 존재하지 않습니다."));
         UserAuthority userAuthority = UserAuthority.builder()
                         .userEntity(userEntity)
                         .auth(authority)
