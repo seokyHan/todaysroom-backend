@@ -1,6 +1,7 @@
 package com.todaysroom.user.service;
 
 
+import com.todaysroom.global.exception.CustomException;
 import com.todaysroom.oauth2.exception.AuthorityNotFoundException;
 import com.todaysroom.global.types.Role;
 import com.todaysroom.user.dto.UserLoginDto;
@@ -9,14 +10,10 @@ import com.todaysroom.user.dto.UserTokenInfoDto;
 import com.todaysroom.user.entity.Authority;
 import com.todaysroom.user.entity.UserAuthority;
 import com.todaysroom.user.entity.UserEntity;
-import com.todaysroom.user.exception.DuplicatedEmailException;
-import com.todaysroom.user.exception.ExpiredRefreshTokenException;
-import com.todaysroom.user.exception.NoRefreshTokenException;
-import com.todaysroom.user.jwt.TokenProvider;
+import com.todaysroom.global.security.jwt.TokenProvider;
 import com.todaysroom.user.repository.AuthorityRepository;
 import com.todaysroom.user.repository.UserAuthorityRepository;
 import com.todaysroom.user.repository.UserRepository;
-import com.todaysroom.global.types.AuthType;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,11 +31,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.todaysroom.global.exception.code.AuthResponseCode.*;
+import static com.todaysroom.global.types.AuthType.*;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Service
 @Slf4j
@@ -62,28 +65,14 @@ public class UserService {
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        UserTokenInfoDto tokenInfo = tokenProvider.generateToken(authentication);
         UserEntity userEntity = userRepository.findByUserEmail(userLoginDto.userEmail());
-        List<String> userAuthorities = userEntity.getAuthorities().stream()
-                .map(authority -> authority.getAuth().getAuthorityName())
-                .collect(Collectors.toList());
 
-        UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.builder()
-                .accessToken(tokenInfo.accessToken())
-                .refreshToken(tokenInfo.refreshToken())
-                .id(userEntity.getId())
-                .userEmail(userEntity.getUserEmail())
-                .userName(userEntity.getUserName())
-                .nickname(userEntity.getNickname())
-                .recentSearch(userEntity.getRecentSearch())
-                .authorities(userAuthorities)
-                .build();
+        UserTokenInfoDto userTokenInfoDto = generateUserTokenInfo(authentication, userEntity);
 
-        redisTemplate.opsForValue()
-                .set(AuthType.REFRESHTOKEN_KEY.getByItem() + userTokenInfoDto.userEmail(),
-                        userTokenInfoDto.refreshToken(),
-                        tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
-                        TimeUnit.MILLISECONDS);
+        setTokenInRedis(REFRESHTOKEN_KEY + userTokenInfoDto.userEmail(),
+                userTokenInfoDto.refreshToken(),
+                tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
+                TimeUnit.MILLISECONDS);
 
         return setResponseData(userTokenInfoDto);
     }
@@ -92,69 +81,53 @@ public class UserService {
     public ResponseEntity userLogout(UserTokenInfoDto userTokenInfoDto){
         // 1. Access Token 에서 User email 을 가져옴.
         Authentication authentication = tokenProvider.getAuthentication(userTokenInfoDto.accessToken());
-        String refreshToken = (String)redisTemplate.opsForValue().get(AuthType.REFRESHTOKEN_KEY.getByItem() + authentication.getName());
+        String refreshToken = (String)redisTemplate.opsForValue().get(REFRESHTOKEN_KEY + authentication.getName());
 
         if(refreshToken != null){
-            redisTemplate.delete(AuthType.REFRESHTOKEN_KEY.getByItem() + authentication.getName());
+            redisTemplate.delete(REFRESHTOKEN_KEY + authentication.getName());
         }
 
-        Long now = new Date().getTime();
-        Long expiration = tokenProvider.getExpiration(userTokenInfoDto.accessToken());
+        ZonedDateTime zdt = ZonedDateTime.of(LocalDateTime.now(), ZoneId.systemDefault());
+        long now = zdt.toInstant().toEpochMilli();
+        long expiration = tokenProvider.getExpiration(userTokenInfoDto.accessToken());
 
-        redisTemplate.opsForValue()
-                .set(userTokenInfoDto.accessToken(), "logout", (expiration - now), TimeUnit.MILLISECONDS);
-
+        setTokenInRedis(userTokenInfoDto.accessToken(), "logout", (expiration - now), TimeUnit.MILLISECONDS);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Transactional
     public ResponseEntity<UserTokenInfoDto> reissue(HttpServletRequest request) {
-        String headerCookie = request.getHeader(AuthType.REISSUE_HEADER.getByItem());
-        int start = headerCookie.indexOf(AuthType.HEADER_VALUE.getByItem()) + AuthType.HEADER_VALUE.getByItem().length();
+        String headerCookie = request.getHeader(REISSUE_HEADER.getByItem());
+        int start = headerCookie.indexOf(HEADER_VALUE.getByItem()) + HEADER_VALUE.getByItem().length();
         int end = headerCookie.indexOf(";", start);
         String cookieRefreshToken = headerCookie.substring(start,end);
 
         Authentication authentication = tokenProvider.getAuthentication(cookieRefreshToken);
-        String refreshToken = (String)redisTemplate.opsForValue().get(AuthType.REFRESHTOKEN_KEY.getByItem() + authentication.getName());
+        String refreshToken = (String)redisTemplate.opsForValue().get(REFRESHTOKEN_KEY + authentication.getName());
 
         // Redis 저장된 RefreshToken 찾은 후 없으면 401 에러
         if(ObjectUtils.isEmpty(refreshToken)){
-            throw  new NoRefreshTokenException();
+            throw new CustomException("토큰 정보 미존재", UNAUTHORIZED);
         }
 
         // RefreshToken이 만료 됐는지
-        if (!tokenProvider.validateToken(refreshToken)) {
-            throw  new ExpiredRefreshTokenException();
+        if (redisTemplate.opsForValue().get(refreshToken) == null) {
+            throw new CustomException("refreshToken 만료", TOKEN_EXPIRED);
         }
 
         UserEntity userInfo = userRepository.findByUserEmail(authentication.getName());
-        List<String> userAuthorities = userInfo.getAuthorities().stream()
-                .map(authority -> authority.getAuth().getAuthorityName())
-                .collect(Collectors.toList());
 
         if (userInfo == null) {
-            return ResponseEntity.badRequest().build();
+            throw new CustomException("해당 User를 찾을 수 없습니다.", USER_NOT_FOUND);
         }
 
-        UserTokenInfoDto tokenInfo = tokenProvider.generateToken(authentication);
+        UserTokenInfoDto userTokenInfoDto = generateUserTokenInfo(authentication, userInfo);
 
-        redisTemplate.opsForValue()
-                .set(AuthType.REFRESHTOKEN_KEY.getByItem() + authentication.getName(),
-                        tokenInfo.refreshToken(),
-                        tokenProvider.getExpiration(tokenInfo.refreshToken()),
-                        TimeUnit.MILLISECONDS);
-
-        UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.builder()
-                .accessToken(tokenInfo.accessToken())
-                .refreshToken(tokenInfo.refreshToken())
-                .id(userInfo.getId())
-                .userEmail(userInfo.getUserEmail())
-                .userName(userInfo.getUserName())
-                .nickname(userInfo.getNickname())
-                .recentSearch(userInfo.getRecentSearch())
-                .authorities(userAuthorities)
-                .build();
+        setTokenInRedis(REFRESHTOKEN_KEY.getByItem() + authentication.getName(),
+                userTokenInfoDto.refreshToken(),
+                tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
+                TimeUnit.MILLISECONDS);
 
         return setResponseData(userTokenInfoDto);
     }
@@ -175,35 +148,18 @@ public class UserService {
         userAuthorityRepository.save(userAuthority);
         userRepository.save(userEntity);
 
-        List<String> userAuthorities = userEntity.getAuthorities().stream()
-                .map(auth -> auth.getAuth().getAuthorityName())
-                .collect(Collectors.toList());
+        UserTokenInfoDto userTokenInfoDto = generateUserTokenInfo(accessToken, refreshToken, userEntity);
 
-        UserTokenInfoDto userTokenInfoDto = UserTokenInfoDto.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .id(userEntity.getId())
-                .userEmail(userEntity.getUserEmail())
-                .userName(userEntity.getUserName())
-                .nickname(userEntity.getNickname())
-                .authorities(userAuthorities)
-                .build();
-
-        redisTemplate.opsForValue()
-                .set(AuthType.REFRESHTOKEN_KEY.getByItem() + userTokenInfoDto.userEmail(),
-                        userTokenInfoDto.refreshToken(),
-                        tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
-                        TimeUnit.MILLISECONDS);
+        setTokenInRedis(REFRESHTOKEN_KEY.getByItem() + userTokenInfoDto.userEmail(),
+                userTokenInfoDto.refreshToken(),
+                tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
+                TimeUnit.MILLISECONDS);
 
         return setResponseData(userTokenInfoDto);
     }
 
     @Transactional
     public ResponseEntity signup(UserSignupDto userSignupDto) throws AuthorityNotFoundException {
-        if(!validateDuplicatedEmail(userSignupDto.userEmail())){
-            throw new DuplicatedEmailException();
-        }
-
         UserEntity signupUser = userSignupDto.toUserEntity();
 
         UserEntity userEntity = UserEntity.builder()
@@ -232,31 +188,9 @@ public class UserService {
         return true;
     }
 
-    public ResponseEntity refreshTokenTest (HttpServletRequest request){
-        String cookie = request.getHeader(AuthType.REISSUE_HEADER.getByItem());
-
-        int start = cookie.indexOf("refreshToken=") + "refreshToken=".length();
-        int end = cookie.indexOf(";", start);
-        String rtk = cookie.substring(start,end);
-        log.info("header에서 RTK : {}", rtk);
-        Authentication authentication = tokenProvider.getAuthentication(rtk);
-        String refreshToken = (String)redisTemplate.opsForValue().get(AuthType.REFRESHTOKEN_KEY.getByItem() + authentication.getName());
-
-        if(ObjectUtils.isEmpty(refreshToken)){
-            log.info("비어있음");
-        }
-
-        // RefreshToken이 만료 됐는지
-        if (!tokenProvider.validateToken(refreshToken)) {
-            log.info("만료");
-        }
-
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
     private ResponseEntity<UserTokenInfoDto> setResponseData(UserTokenInfoDto userTokenInfoDto) {
-        ResponseCookie cookie = ResponseCookie.from(AuthType.REFRESHTOKEN_KEY.getByItem(), userTokenInfoDto.refreshToken())
-                .maxAge(1209600)
+        ResponseCookie cookie = ResponseCookie.from(REFRESHTOKEN_KEY.getByItem(), userTokenInfoDto.refreshToken())
+                .maxAge(12096000)
                 .path("/")
                 .secure(true)
                 .sameSite("None")
@@ -266,12 +200,52 @@ public class UserService {
 
         return new ResponseEntity<>(userTokenInfoDto, httpHeaders, HttpStatus.OK);
     }
-    public HttpHeaders addHttpHeaders(String accessToken, String refreshToken){
+    private HttpHeaders addHttpHeaders(String accessToken, String refreshToken){
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(TokenProvider.AUTHORIZATION_HEADER, accessToken);
+        httpHeaders.add(AUTHORIZATION, accessToken);
         httpHeaders.add(TokenProvider.COOKIE_HEADER, refreshToken);
 
         return httpHeaders;
+    }
+
+    private void setTokenInRedis(String key, String value, long expiration, TimeUnit time){
+        redisTemplate.opsForValue()
+                .set(key, value, expiration, time);
+    }
+
+    private UserTokenInfoDto generateUserTokenInfo(Authentication authentication, UserEntity userEntity) {
+        UserTokenInfoDto tokenInfo = tokenProvider.generateToken(authentication);
+        List<String> userAuthorities = userEntity.getAuthorities().stream()
+                .map(authority -> authority.getAuth().getAuthorityName())
+                .collect(Collectors.toList());
+
+        return UserTokenInfoDto.builder()
+                .accessToken(tokenInfo.accessToken())
+                .refreshToken(tokenInfo.refreshToken())
+                .id(userEntity.getId())
+                .userEmail(userEntity.getUserEmail())
+                .userName(userEntity.getUserName())
+                .nickname(userEntity.getNickname())
+                .recentSearch(userEntity.getRecentSearch())
+                .authorities(userAuthorities)
+                .build();
+    }
+
+    private UserTokenInfoDto generateUserTokenInfo(String accessToken, String refreshToken, UserEntity userEntity) {
+        List<String> userAuthorities = userEntity.getAuthorities().stream()
+                .map(authority -> authority.getAuth().getAuthorityName())
+                .collect(Collectors.toList());
+
+        return UserTokenInfoDto.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .id(userEntity.getId())
+                .userEmail(userEntity.getUserEmail())
+                .userName(userEntity.getUserName())
+                .nickname(userEntity.getNickname())
+                .recentSearch(userEntity.getRecentSearch())
+                .authorities(userAuthorities)
+                .build();
     }
 
 
