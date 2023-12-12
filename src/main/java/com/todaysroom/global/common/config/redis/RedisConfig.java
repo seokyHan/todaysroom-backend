@@ -1,5 +1,7 @@
 package com.todaysroom.global.common.config.redis;
 
+import com.todaysroom.global.common.config.redis.props.RedisProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,13 +14,15 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 @EnableRedisRepositories(enableKeyspaceEvents = RedisKeyValueAdapter.EnableKeyspaceEvents.ON_STARTUP)
 @Configuration
 public class RedisConfig {
-    // redis 연동은 redisTemplate, redisRepository 두 방식이 있지만 여기에 적용할 건 redisRepository
 
-    @Value("${spring.data.redis.host}")
     private String redisHost;
-
-    @Value("${spring.data.redis.port}")
     private int redisPort;
+
+    @Autowired
+    public RedisConfig(RedisProperties properties) {
+        this.redisHost = properties.host();
+        this.redisPort = properties.port();
+    }
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
