@@ -1,4 +1,4 @@
-package com.todaysroom.types;
+package com.todaysroom.global.types;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
