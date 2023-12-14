@@ -3,11 +3,9 @@ package com.todaysroom.file.service;
 import com.todaysroom.file.dto.UserFileRequestDto;
 import com.todaysroom.file.entity.FilesLocation;
 import com.todaysroom.file.entity.UserFiles;
-import com.todaysroom.file.exception.FailedMakeDirectoryException;
-import com.todaysroom.file.exception.FailedStoreFileException;
-import com.todaysroom.file.exception.FileLocationNotFoundException;
 import com.todaysroom.file.repository.FilesRepository;
 import com.todaysroom.file.repository.UserFilesRepository;
+import com.todaysroom.global.exception.CustomException;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +25,9 @@ import java.text.Normalizer;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static com.todaysroom.global.exception.code.AuthResponseCode.USER_NOT_FOUND;
+import static com.todaysroom.global.exception.code.CommonResponseCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -65,7 +66,7 @@ public class FileService {
             }
 
         } catch (IOException e){
-            throw new FailedMakeDirectoryException();
+            throw new CustomException(DIRECTORY_MAKE_ERROR, "디렉토리 생성 실패");
         }
 
         for(MultipartFile file : userFileDto.fileList()){
@@ -81,7 +82,7 @@ public class FileService {
             String contentType = file.getContentType();
 
             if(file.isEmpty() || file.getOriginalFilename() == null){
-                throw new FailedStoreFileException();
+                throw new CustomException(FILE_NOT_FOUND, "저장하려는 파일을 찾을 수 없습니다.");
             }
 
             Path destinationFile = imageDirectoryPath
@@ -108,8 +109,7 @@ public class FileService {
             userFilesRepository.save(userFiles);
 
         } catch (IOException e){
-            e.printStackTrace();
-            throw new FailedStoreFileException();
+            throw new CustomException(FILE_NOT_FOUND, "파일 저장에 실패 했습니다.");
         }
     }
 
@@ -128,7 +128,7 @@ public class FileService {
 
     @Transactional
     public FilesLocation findByFileLocationId(Long id){
-        FilesLocation filesLocation = filesRepository.findById(id).orElseThrow(FileLocationNotFoundException::new);
+        FilesLocation filesLocation = filesRepository.findById(id).orElseThrow(() -> new CustomException(FILE_LOCATION_NOT_FOUND, "저장하려는 파일의 서비스를 찾을 수 없습니다."));
 
         return filesLocation;
     }
