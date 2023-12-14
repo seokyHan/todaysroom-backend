@@ -1,15 +1,15 @@
-package com.todaysroom.user.jwt;
+package com.todaysroom.global.security.jwt;
 
+import com.todaysroom.global.security.jwt.types.TokenType;
+import com.todaysroom.global.security.props.JWTProperties;
 import com.todaysroom.global.types.Role;
 import com.todaysroom.user.dto.UserTokenInfoDto;
 import com.todaysroom.global.types.AuthType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,64 +17,57 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.security.Key;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
+import static com.todaysroom.global.security.jwt.types.TokenType.ACCESS_TOKEN;
+import static com.todaysroom.global.security.jwt.types.TokenType.REFRESH_TOKEN;
+
 @Slf4j
 @Component
-public class TokenProvider implements InitializingBean {
-    public static final String AUTHORITIES_KEY = AuthType.AUTHORITIES_KEY.getByItem();
-    public static final String AUTHORIZATION_HEADER = AuthType.AUTHORIZATION_HEADER.getByItem();
-    public static final String COOKIE_HEADER = AuthType.COOKIE_HEADER.getByItem();
-    public static final String TOKEN_HEADER = AuthType.TOKEN_HEADER.getByItem();
-    private final String secret;
+public class TokenProvider{
+    public final String AUTHORITIES_KEY = AuthType.AUTHORITIES_KEY.getItem();
+    public static final String COOKIE_HEADER = AuthType.COOKIE_HEADER.getItem();
     private final long tokenValidityInMilliseconds;
     private final long refreshTokenValidityInMilliseconds;
     private final RedisTemplate redisTemplate;
-    private Key key;
-    public TokenProvider(@Value("${jwt.secret}")  String secret,
-                         @Value("${jwt.token-validity-in-seconds}") long tokenValidityInMilliseconds,
-                         @Value("${jwt.refresh-token-validity-in-sec}") long refreshTokenValidityInMilliseconds,
+    private final Key key;
+
+    @Autowired
+    public TokenProvider(JWTProperties properties,
                          RedisTemplate redisTemplate) {
-        this.secret = secret;
-        this.tokenValidityInMilliseconds = tokenValidityInMilliseconds * 1000;
-        this.refreshTokenValidityInMilliseconds = refreshTokenValidityInMilliseconds * 1000;
+        this.tokenValidityInMilliseconds = properties.tokenValidityInMilliseconds();
+        this.refreshTokenValidityInMilliseconds = properties.refreshTokenValidityInMilliseconds();
+        byte[] keyBytes = Decoders.BASE64.decode(properties.secret());
+        this.key = Keys.hmacShaKeyFor(keyBytes);
         this.redisTemplate = redisTemplate;
     }
 
-    // InitializingBean을 상속받고 afterPropertiesSet을 override한 이유는 빈이 생성되고
-    // BASE64로 복호화된 시크릿키로 key를 할당하기 위함
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
-    }
-
     public String oAuth2CreateAccessToken(String email, Role role) {
-        long now = (new Date()).getTime();
-        Date validity = new Date(now + tokenValidityInMilliseconds);
 
         return Jwts.builder()
                 .setSubject(email)
+//                .setIssuer(format("https://%s",host))
+//                .setAudience(host)
                 .claim(AUTHORITIES_KEY, role)
-                .setExpiration(validity)  //토큰 만료 시간 설정
+                .setExpiration(getTokenExpiration(ACCESS_TOKEN))  //토큰 만료 시간 설정
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
 
     public String oAuth2CreateRefreshToken(String email, Role role) {
-        long now = (new Date()).getTime();
-        Date rtkValidity = new Date(now + refreshTokenValidityInMilliseconds);
 
         return Jwts.builder()
                 .setSubject(email)
                 .claim(AUTHORITIES_KEY, role)
-                .setExpiration(rtkValidity)
+                .setExpiration(getTokenExpiration(REFRESH_TOKEN))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
@@ -86,15 +79,11 @@ public class TokenProvider implements InitializingBean {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
-        long now = (new Date()).getTime();
-        Date validity = new Date(now + tokenValidityInMilliseconds);
-        Date rtkValidity = new Date(now + refreshTokenValidityInMilliseconds);
-
         //Generate AccessToken
         String accessToken = Jwts.builder()
                 .setSubject(authentication.getName())
                 .claim(AUTHORITIES_KEY, authorities)
-                .setExpiration(validity)  //토큰 만료 시간 설정
+                .setExpiration(getTokenExpiration(ACCESS_TOKEN))  //토큰 만료 시간 설정
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
 
@@ -103,7 +92,7 @@ public class TokenProvider implements InitializingBean {
         String refreshToken = Jwts.builder()
                 .setSubject(authentication.getName())
                 .claim(AUTHORITIES_KEY, authorities)
-                .setExpiration(rtkValidity)
+                .setExpiration(getTokenExpiration(REFRESH_TOKEN))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
 
@@ -133,7 +122,7 @@ public class TokenProvider implements InitializingBean {
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 
-    public Long getExpiration(String token) {
+    public long getExpiration(String token) {
         Date expiration = Jwts
                 .parserBuilder()
                 .setSigningKey(key)
@@ -143,16 +132,6 @@ public class TokenProvider implements InitializingBean {
                 .getExpiration();
 
         return expiration.getTime();
-    }
-
-    // request header에서 토큰 정보 가져옴
-    public String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith(TOKEN_HEADER)){
-            return bearerToken.substring(TOKEN_HEADER.length());
-        }
-
-        return null;
     }
 
     public boolean validateToken(String token) {
@@ -173,5 +152,16 @@ public class TokenProvider implements InitializingBean {
         }
         return false;
 
+    }
+
+    private Date getTokenExpiration(final TokenType tokenType){
+        ZonedDateTime zdt = ZonedDateTime.of(LocalDateTime.now(), ZoneId.systemDefault());
+        long now = zdt.toInstant().toEpochMilli();
+        Date validity = new Date(now + tokenValidityInMilliseconds);
+        if(tokenType.equals(REFRESH_TOKEN)){
+            validity = new Date(now + refreshTokenValidityInMilliseconds);
+        }
+
+        return validity;
     }
 }
