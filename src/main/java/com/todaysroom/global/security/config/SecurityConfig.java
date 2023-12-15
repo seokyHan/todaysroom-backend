@@ -1,12 +1,11 @@
-package com.todaysroom.global.security;
+package com.todaysroom.global.security.config;
 
 import com.todaysroom.oauth2.handler.OAuth2LoginFailureHandler;
 import com.todaysroom.oauth2.handler.OAuth2LoginSuccessHandler;
 import com.todaysroom.oauth2.service.CustomOAuth2UserService;
-import com.todaysroom.user.jwt.JwtAccessDeniedHandler;
-import com.todaysroom.user.jwt.JwtAuthenticationEntryPoint;
-import com.todaysroom.user.jwt.JwtSecurityConfig;
-import com.todaysroom.user.jwt.TokenProvider;
+import com.todaysroom.global.security.handler.JwtAccessDeniedHandler;
+import com.todaysroom.global.security.handler.JwtAuthenticationEntryPoint;
+import com.todaysroom.global.security.jwt.TokenProvider;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -27,10 +26,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 
 import java.util.Arrays;
-import java.util.List;
 
 import static java.util.Arrays.stream;
 import static org.springframework.http.HttpMethod.*;
@@ -49,7 +46,7 @@ public class SecurityConfig{
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
 
-    private static final String[] WHITE_LIST = {
+    public static final String[] WHITE_LIST = {
             "/users/signup",
             "/users/email-check",
             "/users/login",
