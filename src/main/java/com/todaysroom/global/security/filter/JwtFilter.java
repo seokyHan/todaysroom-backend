@@ -1,18 +1,13 @@
 package com.todaysroom.global.security.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.todaysroom.global.types.AuthType;
-import com.todaysroom.user.dto.ResponseDto;
-import com.todaysroom.global.types.ErrorCode;
 import com.todaysroom.global.security.jwt.TokenProvider;
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
@@ -20,10 +15,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static com.todaysroom.global.security.config.SecurityConfig.WHITE_LIST;
+import static com.todaysroom.global.types.AuthType.TOKEN_HEADER;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -60,8 +55,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION);
-        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith(AuthType.TOKEN_HEADER.getByItem())){
-            return bearerToken.substring(AuthType.TOKEN_HEADER.getByItem().length());
+        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith(TOKEN_HEADER.getItem())){
+            return bearerToken.substring(TOKEN_HEADER.getItem().length());
         }
 
         return null;
