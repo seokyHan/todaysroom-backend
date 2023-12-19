@@ -2,7 +2,7 @@ package com.todaysroom.inquiry.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.todaysroom.common.BaseTimeEntity;
+import com.todaysroom.global.common.BaseTimeEntity;
 import com.todaysroom.inquiry.dto.InquiryUpdateDto;
 import com.todaysroom.user.entity.UserEntity;
 import jakarta.persistence.*;
