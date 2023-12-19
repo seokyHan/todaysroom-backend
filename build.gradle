@@ -23,6 +23,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation group: 'org.json', name: 'json', version: '20160810'
 
+	// java api util class package
+	implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+
 	//validation
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
@@ -43,12 +46,14 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
 	//RestTemplate에 retryTemplate(재시도) 추가
-	implementation 'org.springframework.retry:spring-retry:1.2.5.RELEASE'
+	implementation 'org.springframework.retry:spring-retry:2.0.0'
 
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
