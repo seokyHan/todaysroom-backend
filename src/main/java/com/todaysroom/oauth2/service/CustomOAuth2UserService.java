@@ -1,10 +1,10 @@
 package com.todaysroom.oauth2.service;
 
 
-import com.todaysroom.oauth2.CustomOAuth2User;
-import com.todaysroom.oauth2.OAuthAttributes;
-import com.todaysroom.oauth2.exception.AuthorityNotFoundException;
-import com.todaysroom.types.SocialType;
+import com.todaysroom.global.exception.CustomException;
+import com.todaysroom.oauth2.common.CustomOAuth2User;
+import com.todaysroom.oauth2.common.OAuthAttributes;
+import com.todaysroom.oauth2.types.SocialType;
 import com.todaysroom.user.entity.Authority;
 import com.todaysroom.user.entity.UserAuthority;
 import com.todaysroom.user.entity.UserEntity;
@@ -13,7 +13,6 @@ import com.todaysroom.user.repository.UserAuthorityRepository;
 import com.todaysroom.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -24,10 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+
+import static com.todaysroom.global.exception.code.AuthResponseCode.UNAUTHORIZED;
 
 @Slf4j
 @Service
@@ -99,7 +97,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     @Transactional
     public UserEntity getUserOrCreateUser(OAuthAttributes attributes, SocialType socialType) {
         Authority authority = authorityRepository.findById(3L)
-                .orElseThrow(AuthorityNotFoundException::new);
+                .orElseThrow(() -> new CustomException("권한이 존재하지 않습니다.", UNAUTHORIZED));
 
         UserEntity findUser = userRepository.findBySocialTypeAndSocialId(socialType,
                 attributes.getOAuth2UserInfo().getId()).orElse(null);
