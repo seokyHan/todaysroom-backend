@@ -1,13 +1,11 @@
 package com.todaysroom.oauth2.handler;
 
-import com.todaysroom.oauth2.CustomOAuth2User;
-import com.todaysroom.types.AuthType;
-import com.todaysroom.types.Role;
+import com.todaysroom.oauth2.common.CustomOAuth2User;
+import com.todaysroom.global.types.Role;
 import com.todaysroom.user.entity.UserEntity;
-import com.todaysroom.user.jwt.TokenProvider;
+import com.todaysroom.global.security.jwt.TokenProvider;
 import com.todaysroom.user.repository.UserRepository;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -16,18 +14,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+
+import static com.todaysroom.global.types.AuthType.REFRESHTOKEN_KEY;
 
 @Slf4j
 @Component
@@ -43,7 +39,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private String userRedirectUrl;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         try{
             CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
 
@@ -65,14 +61,14 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private void loginSuccess(HttpServletResponse response, CustomOAuth2User oAuth2User) throws IOException{
         String accessToken = tokenProvider.oAuth2CreateAccessToken(oAuth2User.getEmail(), Role.USER);
         String refreshToken = tokenProvider.oAuth2CreateRefreshToken(oAuth2User.getEmail(), Role.USER);
-        String redisRtk = (String)redisTemplate.opsForValue().get(AuthType.REFRESHTOKEN_KEY.getByItem() + oAuth2User.getEmail());
+        String redisRtk = (String)redisTemplate.opsForValue().get(REFRESHTOKEN_KEY.getItem() + oAuth2User.getEmail());
 
         if(StringUtils.hasText(redisRtk)){
-            redisTemplate.delete(AuthType.REFRESHTOKEN_KEY.getByItem() + oAuth2User.getEmail());
+            redisTemplate.delete(REFRESHTOKEN_KEY.getItem() + oAuth2User.getEmail());
         }
 
         redisTemplate.opsForValue()
-                .set(AuthType.REFRESHTOKEN_KEY.getByItem() + oAuth2User.getEmail(),
+                .set(REFRESHTOKEN_KEY.getItem() + oAuth2User.getEmail(),
                         refreshToken,
                         tokenProvider.getExpiration(refreshToken),
                         TimeUnit.MILLISECONDS);
@@ -84,7 +80,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         setCookie(response, "recentSearch", userEntity.getRecentSearch() == null ? "" : userEntity.getRecentSearch());
         setCookie(response, "socialLogin", "success");
         setTokenToCookie(response, "auth", accessToken, 36000, true, false);
-        setTokenToCookie(response, AuthType.REFRESHTOKEN_KEY.getByItem(), refreshToken, 1209600, true, true);
+        setTokenToCookie(response, REFRESHTOKEN_KEY.getItem(), refreshToken, 1209600, true, true);
 
         response.sendRedirect(userRedirectUrl);
     }
