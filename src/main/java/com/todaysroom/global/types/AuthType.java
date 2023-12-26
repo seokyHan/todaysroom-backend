@@ -1,22 +1,19 @@
-package com.todaysroom.types;
+package com.todaysroom.global.types;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum AuthType {
 
     AUTHORITIES_KEY("auth"),
-    AUTHORIZATION_HEADER("Authorization"),
     COOKIE_HEADER("Set-Cookie"),
     REFRESHTOKEN_KEY("refreshToken"),
     HEADER_VALUE("refreshToken="),
     REISSUE_HEADER("cookie"),
     TOKEN_HEADER("Bearer ");
 
-    final private String item;
+    private final String item;
 
-    AuthType(String item) {
-        this.item = item;
-    }
-
-    public String getByItem() {
-        return item;
-    }
 }
