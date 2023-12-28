@@ -1,9 +1,8 @@
 package com.todaysroom.inquiry.dto;
 
-import com.todaysroom.common.file.entity.UserFiles;
+import com.todaysroom.file.entity.UserFiles;
 import com.todaysroom.inquiry.entity.Inquiry;
 import com.todaysroom.inquiry.entity.InquiryAnswer;
-import org.springframework.web.multipart.MultipartFile;
 
 
 import java.time.LocalDateTime;
