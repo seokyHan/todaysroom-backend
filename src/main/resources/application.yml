@@ -77,11 +77,10 @@ spring:
 #HS512 알고리즘을 사용할 것이기 때문에 512bit, 즉 64byte 이상의 secret key를 사용해야 한다.
 #echo 'silvernine-tech-spring-boot-jwt-tutorial-secret-silvernine-tech-spring-boot-jwt-tutorial-secret'|base64
 jwt:
-  header: Authorization
-  secret: eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTY3OTU0OTIwNiwiaWF0IjoxNjc5NTQ5MjA2fQyZXQK1
-
-  token-validity-in-seconds: 1800
-  refresh-token-validity-in-sec: 1209600
+  host: todaysroom.com
+  secret: q1ZST0pl2057VfOGrlBjo6bPcx8L9IZaJx+BtDVHxQpNBS9IKyahbulcV/2mgRzipS/B0AZxEmlBpTDsSi2zxGuRylEwRLpSKo6dlRt3QeFfNwOM4cUet8K0cMvvTTuVe/i6s6VU0KCpCi6kUuEfg4qpyrMD6MQu8DRMOK24eFxnxFJe04L4wpcG3lmFnS/uo0DLx3l4XE94eypYxFLlpQ==
+  token-validity-in-milliseconds: 3600000
+  refresh-token-validity-in-milliseconds: 12096000
 
 # oauth2 url
 oauth:
