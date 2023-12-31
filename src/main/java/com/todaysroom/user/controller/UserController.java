@@ -59,12 +59,4 @@ public class UserController {
         return new ResponseEntity(userService.validateDuplicatedEmail(userEmail), HttpStatus.OK);
     }
 
-    @PostMapping("/test")
-    public ResponseEntity postMember(HttpServletRequest request) {
-
-        return userService.refreshTokenTest(request);
-    }
-
-
-
 }
