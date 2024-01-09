@@ -2,6 +2,7 @@ package com.todaysroom.user.service;
 
 
 import com.todaysroom.global.exception.CustomException;
+import com.todaysroom.global.types.AuthType;
 import com.todaysroom.global.types.Role;
 import com.todaysroom.user.dto.UserLoginDto;
 import com.todaysroom.user.dto.UserSignupDto;
@@ -202,7 +203,7 @@ public class UserService {
     private HttpHeaders addHttpHeaders(String accessToken, String refreshToken){
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(AUTHORIZATION, accessToken);
-        httpHeaders.add(TokenProvider.COOKIE_HEADER, refreshToken);
+        httpHeaders.add(COOKIE_HEADER.getItem(), refreshToken);
 
         return httpHeaders;
     }
