@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.todaysroom.global.common.BaseTimeEntity;
 import com.todaysroom.inquiry.entity.Inquiry;
 import com.todaysroom.global.types.Role;
-import com.todaysroom.global.types.SocialType;
+import com.todaysroom.oauth2.types.SocialType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
