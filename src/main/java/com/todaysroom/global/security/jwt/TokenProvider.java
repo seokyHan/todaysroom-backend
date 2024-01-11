@@ -25,16 +25,17 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.todaysroom.global.security.jwt.types.TokenType.ACCESS_TOKEN;
 import static com.todaysroom.global.security.jwt.types.TokenType.REFRESH_TOKEN;
+import static com.todaysroom.global.types.AuthType.AUTHORITIES_KEY;
 
 @Slf4j
 @Component
 public class TokenProvider{
-    public final String AUTHORITIES_KEY = AuthType.AUTHORITIES_KEY.getItem();
-    public static final String COOKIE_HEADER = AuthType.COOKIE_HEADER.getItem();
+    private static final Map<String, Object> jwtHeader = Map.of("alg", "HS512", "typ", "JWT");
     private final long tokenValidityInMilliseconds;
     private final long refreshTokenValidityInMilliseconds;
     private final RedisTemplate redisTemplate;
@@ -53,10 +54,11 @@ public class TokenProvider{
     public String oAuth2CreateAccessToken(String email, Role role) {
 
         return Jwts.builder()
+                .setHeader(jwtHeader)
                 .setSubject(email)
 //                .setIssuer(format("https://%s",host))
 //                .setAudience(host)
-                .claim(AUTHORITIES_KEY, role)
+                .claim(AUTHORITIES_KEY.getItem(), role)
                 .setExpiration(getTokenExpiration(ACCESS_TOKEN))  //토큰 만료 시간 설정
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
@@ -65,8 +67,9 @@ public class TokenProvider{
     public String oAuth2CreateRefreshToken(String email, Role role) {
 
         return Jwts.builder()
+                .setHeader(jwtHeader)
                 .setSubject(email)
-                .claim(AUTHORITIES_KEY, role)
+                .claim(AUTHORITIES_KEY.getItem(), role)
                 .setExpiration(getTokenExpiration(REFRESH_TOKEN))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
@@ -81,8 +84,9 @@ public class TokenProvider{
 
         //Generate AccessToken
         String accessToken = Jwts.builder()
+                .setHeader(jwtHeader)
                 .setSubject(authentication.getName())
-                .claim(AUTHORITIES_KEY, authorities)
+                .claim(AUTHORITIES_KEY.getItem(), authorities)
                 .setExpiration(getTokenExpiration(ACCESS_TOKEN))  //토큰 만료 시간 설정
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
@@ -90,8 +94,9 @@ public class TokenProvider{
 
         //Generate RefreshToken
         String refreshToken = Jwts.builder()
+                .setHeader(jwtHeader)
                 .setSubject(authentication.getName())
-                .claim(AUTHORITIES_KEY, authorities)
+                .claim(AUTHORITIES_KEY.getItem(), authorities)
                 .setExpiration(getTokenExpiration(REFRESH_TOKEN))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
