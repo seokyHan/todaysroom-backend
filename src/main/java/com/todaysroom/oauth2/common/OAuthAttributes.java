@@ -1,11 +1,11 @@
-package com.todaysroom.oauth2;
+package com.todaysroom.oauth2.common;
 
 import com.todaysroom.oauth2.userInfo.GoogleOAuth2UserInfo;
 import com.todaysroom.oauth2.userInfo.KakaoOAuth2UserInfo;
 import com.todaysroom.oauth2.userInfo.NaverOAuth2UserInfo;
 import com.todaysroom.oauth2.userInfo.OAuth2UserInfo;
 import com.todaysroom.global.types.Role;
-import com.todaysroom.global.types.SocialType;
+import com.todaysroom.oauth2.types.SocialType;
 import com.todaysroom.user.entity.Authority;
 import com.todaysroom.user.entity.UserAuthority;
 import com.todaysroom.user.entity.UserEntity;
