@@ -23,6 +23,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.concurrent.TimeUnit;
 
+import static com.todaysroom.global.types.AuthType.COOKIE_HEADER;
 import static com.todaysroom.global.types.AuthType.REFRESHTOKEN_KEY;
 
 @Slf4j
@@ -90,7 +91,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 .path("/")
                 .build();
 
-        response.addHeader(TokenProvider.COOKIE_HEADER, cookie.toString());
+        response.addHeader(COOKIE_HEADER.getItem(), cookie.toString());
     }
 
     private void setTokenToCookie(HttpServletResponse response,
@@ -107,7 +108,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 .httpOnly(isHttp)
                 .build();
 
-        response.addHeader(TokenProvider.COOKIE_HEADER, cookie.toString());
+        response.addHeader(COOKIE_HEADER.getItem(), cookie.toString());
     }
 
 
