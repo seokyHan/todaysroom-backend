@@ -1,6 +1,6 @@
 package com.todaysroom.user.repository;
 
-import com.todaysroom.global.types.SocialType;
+import com.todaysroom.oauth2.types.SocialType;
 import com.todaysroom.user.entity.UserEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
