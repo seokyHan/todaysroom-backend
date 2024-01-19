@@ -1,4 +1,4 @@
-package com.todaysroom.oauth2;
+package com.todaysroom.oauth2.common;
 
 import com.todaysroom.global.types.Role;
 import lombok.Getter;
