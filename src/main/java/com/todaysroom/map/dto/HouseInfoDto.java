@@ -1,8 +1,19 @@
 package com.todaysroom.map.dto;
 
-public record CoordinatesDto(String x, String y) {
+public record HouseInfoDto(Double exclusiveArea,
+                           String buildYear,
+                           String legal,
+                           String roadName,
+                           int floor,
+                           int year,
+                           int month,
+                           int day,
+                           double lng,
+                           double lat,
+                           String amount,
+                           String locationOfAgency,
+                           String aptName
+                           ) {
 
-    public CoordinatesDto of(String x, String y){
-        return new CoordinatesDto(x, y);
-    }
+
 }
