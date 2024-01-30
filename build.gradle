@@ -23,6 +23,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation group: 'org.json', name: 'json', version: '20160810'
 
+	//webClient
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
 	// java api util class package
 	implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 
@@ -48,13 +51,22 @@ dependencies {
 	//RestTemplate에 retryTemplate(재시도) 추가
 	implementation 'org.springframework.retry:spring-retry:2.0.0'
 
+	implementation group: 'org.jetbrains', name: 'annotations', version: '24.0.1'
+	implementation group: 'jakarta.annotation', name: 'jakarta.annotation-api', version: '2.1.1'
+	implementation group: 'one.util', name: 'streamex', version: '0.8.1'
+	implementation group: 'org.modelmapper', name: 'modelmapper', version: '3.0.0'
+	implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testAnnotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation group: 'io.github.dvgaba', name: 'easy-random-core', version: '6.2.0'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'org.awaitility:awaitility:4.2.0'
 }
 
 tasks.named('test') {
