@@ -27,7 +27,7 @@ public enum AptKey {
     BUILD_YEAR("buildYear","건축년도"),
     EXCLUSIVE_AREA("exclusiveArea","전용면적"),
     CANCEL_REASON("cancelReason","해제사유발생일"),
-    LEGAL("leagl","법정동"),
+    LEGAL("legal","법정동"),
     SERIAL_NUMBER("serialNumber","일련번호"),
     AMOUNT("amount","거래금액"),
     ROAD_NAME_CODE("roadNameCode","도로명코드"),
