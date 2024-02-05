@@ -2,16 +2,16 @@ package com.todaysroom.map.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.todaysroom.CommonTest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import reactor.test.StepVerifier;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
 
 @Slf4j
 class HouseMapServiceTest extends CommonTest {
@@ -25,7 +25,7 @@ class HouseMapServiceTest extends CommonTest {
 
     @Test
     void getHouseInfo() throws Exception{
+        this.mvc.perform(get("/map/getHouseInfo")).andDo(print()).andExpect(status().isOk());
 
-        log.info("##result : {}", this.mvc.perform(put("/map/getHouseInfo")));
     }
 }
