@@ -1,8 +1,10 @@
 package com.todaysroom.map.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.todaysroom.map.props.HouseDealProperties;
 import com.todaysroom.map.props.KaKaoProperties;
-import com.todaysroom.map.dto.CoordinatesDto;
+import com.todaysroom.map.dto.HouseInfoDto;
 import com.todaysroom.map.types.AptKey;
 import com.todaysroom.map.types.KakaoParams;
 import lombok.RequiredArgsConstructor;
@@ -10,17 +12,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.XML;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 import static com.todaysroom.map.types.AptKey.*;
 import static com.todaysroom.map.types.HouseDealParams.*;
@@ -32,23 +36,24 @@ import static com.todaysroom.map.types.KakaoParams.*;
 @Slf4j
 public class HouseMapService {
 
-    private final RestTemplate restTemplate;
+    private final WebClient webClient;
+    private final ObjectMapper objectMapper;
     private final HouseDealProperties houseDealProperties;
     private final KaKaoProperties kaKaoProperties;
-    private static final String PAGE = "1";
-    private static final String ROWS = "10";
-    private static final String LNG = "lng";
-    private static final String LAT = "lat";
-    private static final String KAKAO_JSON_KEY = "documents";
+    private final String PAGE = "1";
+    private final String ROWS = "10";
+    private final String LNG = "lng";
+    private final String LAT = "lat";
+    private final String KAKAO_JSON_KEY = "documents";
+    public record CoordinatesDto(String x, String y){}
 
-    public String getHouseInfo() {
+    public Mono<List<HouseInfoDto>> getHouseInfo(){
         UriComponents url = buildHouseInfoUrl();
 
-        JSONObject response = fetchResponse(url);
-        JSONObject responseBody = extractResponseBody(response);
-        JSONArray itemList = addLatLng(responseBody);
+        Mono<JSONObject> responseBody = fetchResponse(url).flatMap(this::extractResponseBody);
+        Mono<List<HouseInfoDto>> itemList = addLatLng(responseBody);
 
-        return itemList.toString();
+        return itemList;
     }
 
     private UriComponents buildHouseInfoUrl(){
@@ -62,40 +67,75 @@ public class HouseMapService {
         return makeUri(houseDealProperties.host(), houseDealProperties.secret(), params);
     }
 
-    private JSONObject fetchResponse(UriComponents url){
-        String response = restTemplate.getForEntity(url.toString(), String.class).getBody();
-        return XML.toJSONObject(response);
+    private Mono<JSONObject> fetchResponse(UriComponents url) {
+        return webClient.get()
+                .uri(url.toString())
+                .retrieve()
+                .bodyToMono(String.class)
+                .map(XML::toJSONObject);
     }
 
-    private JSONObject extractResponseBody(JSONObject response){
-        return response.getJSONObject("response").getJSONObject("body");
+    private Mono<JSONObject> extractResponseBody(JSONObject response) {
+        return Mono.justOrEmpty(response.getJSONObject("response"))
+                .map(body -> body.getJSONObject("body"));
     }
 
-    private JSONArray addLatLng(JSONObject responseBody){
-        JSONArray itemList = responseBody.getJSONObject("items").getJSONArray("item");
-        JSONArray translatedItemList = new JSONArray();
+    private Mono<List<HouseInfoDto>> addLatLng(Mono<JSONObject> responseBodyMono){
+        Mono<List<HouseInfoDto>> houseInfoList = responseBodyMono.flatMap(responseBody -> {
+            JSONArray itemList = responseBody.getJSONObject("items").getJSONArray("item");
+            List<Mono<HouseInfoDto>> houseInfo = getHouseInfo(itemList);
 
-        for(int i = 0; i < itemList.length(); i++){
+            return Flux.merge(houseInfo).collectList();
+        });
+
+        return houseInfoList;
+    }
+
+    private List<Mono<HouseInfoDto>> getHouseInfo(JSONArray itemList){
+        List<Mono<HouseInfoDto>> houseInfo = new ArrayList<>();
+
+        for (int i = 0; i < itemList.length(); i++) {
             JSONObject item = itemList.getJSONObject(i);
 
-            String locationOfAgency = item.getString(LOCAL_OF_AGENCY.getKoreanKey());
-            String legalBuilding = item.getString(LEGAL_BUILDING.getKoreanKey());
-            String roadName = item.getString(ROAD_NAME.getKoreanKey());
-            String roadNameBuildingCode = item.getString(ROAD_NAME_BUILDING_CODE.getKoreanKey()).replace("0","");
-
-            String location = String.join(" ", locationOfAgency, legalBuilding, roadName, roadNameBuildingCode);
-            if(location.contains(",")){
+            if (isContainComma(item)) {
                 continue;
             }
 
             JSONObject translatedItem = translateJsonKey(item);
-            translatedItemList.put(i, translatedItem);
+            Mono<CoordinatesDto> coordinatesDtoMono = getLatLng(getLocation(item));
+            Mono<HouseInfoDto> houseInfoMono = coordinatesDtoMono.flatMap(coordinatesDto -> {
+                translatedItem.put(LNG, coordinatesDto.x());
+                translatedItem.put(LAT, coordinatesDto.y());
+                try {
+                    return Mono.just(objectMapper.readValue(translatedItem.toString(), HouseInfoDto.class));
+                } catch (IOException e) {
+                    log.error("Error processing JSON: {}", e.getMessage());
+                    return Mono.error(e);
+                }
+            });
+
+            houseInfo.add(houseInfoMono);
+
         }
 
-        return translatedItemList;
+        return houseInfo;
     }
 
-    private CoordinatesDto getLatLng(String location) {
+    private boolean isContainComma(JSONObject item){
+        String locationOfAgency = item.getString(LOCAL_OF_AGENCY.getKoreanKey());
+        String legalBuilding = item.getString(LEGAL_BUILDING.getKoreanKey());
+        String roadName = item.getString(ROAD_NAME.getKoreanKey());
+        String roadNameBuildingCode = item.getString(ROAD_NAME_BUILDING_CODE.getKoreanKey()).replace("0", "");
+
+        String location = String.join(" ", locationOfAgency, legalBuilding, roadName, roadNameBuildingCode);
+        if (location.contains(",")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private Mono<CoordinatesDto> getLatLng(String location) {
         String apiKey = String.join(" ", KakaoParams.KAKAO_AK.getKey() + kaKaoProperties.secret());
 
         Map<String, String> params = Map.of(
@@ -104,19 +144,22 @@ public class HouseMapService {
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set(AUTH.getKey(), apiKey);
-
-        HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
-
         UriComponents url = makeUri(kaKaoProperties.host(), apiKey, params);
 
-        String body = restTemplate.exchange(url.toString(), HttpMethod.GET, entity, String.class).getBody();
-        JSONObject json = new JSONObject(body);
+        Mono<CoordinatesDto> coordinatesDto = webClient.get()
+                .uri(url.toString())
+                .headers(headers -> headers.addAll(httpHeaders))
+                .retrieve()
+                .bodyToMono(String.class)
+                .map(JSONObject::new)
+                .flatMap(json -> {
+                    JSONArray documents = json.getJSONArray(KAKAO_JSON_KEY);
+                    String x = documents.getJSONObject(0).getString(LONGITUDE.getKey());
+                    String y = documents.getJSONObject(0).getString(LATITUDE.getKey());
+                    return Mono.just(new CoordinatesDto(x,y));
+                });
 
-        JSONArray documents = json.getJSONArray(KAKAO_JSON_KEY);
-        String x = documents.getJSONObject(0).getString(LONGITUDE.getKey());
-        String y = documents.getJSONObject(0).getString(LATITUDE.getKey());
-
-        return CoordinatesDto.of(x, y);
+        return coordinatesDto;
     }
 
     private UriComponents makeUri(String host, String apiKey, Map<String, String> params){
@@ -148,21 +191,16 @@ public class HouseMapService {
             translateItem.put(ROAD_NAME_BUILDING_CODE.getEnglishKey(), roadNameBuildingCode);
         }
 
-        CoordinatesDto coordinatesDto = getLatLng(getLocation(item));
-        translateItem.put(LNG, coordinatesDto.x());
-        translateItem.put(LAT, coordinatesDto.y());
-
         return translateItem;
     }
 
     private String getLocation(JSONObject item){
-        StringBuilder location = new StringBuilder();
-        for(AptKey aptKey : List.of(LOCAL_OF_AGENCY, LEGAL, ROAD_NAME, ROAD_NAME_BUILDING_CODE)){
-            if(item.has(aptKey.getKoreanKey())){
-                location.append(item.getString(aptKey.getKoreanKey())).append(" ");
-            }
-        }
-        return location.toString();
+        return String.join(" ",
+                item.optString(LOCAL_OF_AGENCY.getKoreanKey(), ""),
+                item.optString(LEGAL.getKoreanKey(), ""),
+                item.optString(ROAD_NAME.getKoreanKey(), ""),
+                item.optString(ROAD_NAME_BUILDING_CODE.getKoreanKey(), "")
+        ).trim();
     }
 
 }
