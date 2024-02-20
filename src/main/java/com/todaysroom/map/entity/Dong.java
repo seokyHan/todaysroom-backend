@@ -1,5 +1,6 @@
 package com.todaysroom.map.entity;
 
+import com.querydsl.core.annotations.QueryEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -7,23 +8,25 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@QueryEntity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class DongCode {
+@Table(name = "DONG")
+public class Dong {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column
     private Long id;
 
-    @Column
+    @Column(name = "DONG_CODE")
     private String dongCode;
 
-    @Column
+    @Column(name = "SIDO_NAME")
     private String sidoName;
 
-    @Column
+    @Column(name = "GUGUN_NAME")
     private String gugunName;
 
-    @Column
+    @Column(name = "DONG_NAME")
     private String dongName;
 }
