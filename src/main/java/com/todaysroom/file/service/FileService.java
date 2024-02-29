@@ -140,36 +140,4 @@ public class FileService {
         return fileList;
     }
 
-    // @Scheduled(cron = "0 * * * * *") 1 분마다 실행
-    @Scheduled(cron = "0 0 18 * * *") // 매일 오후 18시에 실행
-    public void fileDeleteScheduled() {
-        List<UserFiles> fileList = userFilesRepository.findAll();
-
-        try{
-            // 해당 경로 하위 폴더 탐색 후 디렉토리가 아닌 일반파일인지 체크
-            List<Path> filePath = Files.walk(imageDirectoryPath)
-                    .filter(Files::isRegularFile)
-                    .collect(Collectors.toList());
-
-            for(Path path : filePath){
-                String fileName = path.getFileName().toString();
-                if(!isFilePresent(fileName, fileList)){
-                    Files.delete(path);
-                }
-            }
-        }catch (IOException e){
-            log.info(e.getMessage());
-        }
-    }
-
-    private boolean isFilePresent(String fileName, List<UserFiles> fileList){
-        for(UserFiles userFile : fileList){
-            if(userFile.getFileName().equals(fileName)){
-                return true;
-            }
-        }
-
-        return false;
-    }
-
 }
