@@ -1,10 +1,12 @@
 package com.todaysroom.map.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.todaysroom.batch.dto.GuGunDto;
 import com.todaysroom.map.props.HouseDealProperties;
 import com.todaysroom.map.props.KaKaoProperties;
 import com.todaysroom.map.dto.HouseInfoDto;
+import com.todaysroom.map.repository.GugunRepository;
 import com.todaysroom.map.types.AptKey;
 import com.todaysroom.map.types.KakaoParams;
 import lombok.RequiredArgsConstructor;
@@ -22,9 +24,10 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 import static com.todaysroom.map.types.AptKey.*;
 import static com.todaysroom.map.types.HouseDealParams.*;
@@ -40,6 +43,7 @@ public class HouseMapService {
     private final ObjectMapper objectMapper;
     private final HouseDealProperties houseDealProperties;
     private final KaKaoProperties kaKaoProperties;
+    private final GugunRepository gugunRepository;
     private final String PAGE = "1";
     private final String ROWS = "10";
     private final String LNG = "lng";
@@ -47,21 +51,23 @@ public class HouseMapService {
     private final String KAKAO_JSON_KEY = "documents";
     public record CoordinatesDto(String x, String y){}
 
-    public Mono<List<HouseInfoDto>> getHouseInfo(){
-        UriComponents url = buildHouseInfoUrl();
-
-        Mono<JSONObject> responseBody = fetchResponse(url).flatMap(this::extractResponseBody);
-        Mono<List<HouseInfoDto>> itemList = addLatLng(responseBody);
-
-        return itemList;
+    public Mono<List<List<HouseInfoDto>>> getHouseInfo(){
+        return Flux.fromIterable(gugunRepository.findAll().stream().map(GuGunDto::from).collect(Collectors.toUnmodifiableList()))
+                .flatMap(gugun -> {
+                    UriComponents url = buildHouseInfoUrl(gugun.guGunCode());
+                    return fetchResponse(url)
+                            .flatMap(this::extractResponseBody)
+                            .flatMap(responseBody -> addLatLng(responseBody));
+                })
+                .collectList();
     }
 
-    private UriComponents buildHouseInfoUrl(){
+    private UriComponents buildHouseInfoUrl(String gugunCode){
         Map<String, String> params = Map.of(
                 PAGE_NO.getKey(), PAGE,
                 NUM_OF_ROWS.getKey(), ROWS,
-                LAWD_CD.getKey(), "11140",
-                DEAL_YMD.getKey(), "202310"
+                LAWD_CD.getKey(), gugunCode,
+                DEAL_YMD.getKey(), "202402"
         );
 
         return makeUri(houseDealProperties.host(), houseDealProperties.secret(), params);
@@ -77,71 +83,46 @@ public class HouseMapService {
 
     private Mono<JSONObject> extractResponseBody(JSONObject response) {
         return Mono.justOrEmpty(response.getJSONObject("response"))
-                .map(body -> body.getJSONObject("body"));
+                .filterWhen(body -> Mono.just(body.has("body")))
+                .switchIfEmpty(Mono.empty());
     }
 
-    private Mono<List<HouseInfoDto>> addLatLng(Mono<JSONObject> responseBodyMono){
-        Mono<List<HouseInfoDto>> houseInfoList = responseBodyMono.flatMap(responseBody -> {
-            JSONArray itemList = responseBody.getJSONObject("items").getJSONArray("item");
-            List<Mono<HouseInfoDto>> houseInfo = getHouseInfo(itemList);
-
-            return Flux.merge(houseInfo).collectList();
-        });
-
-        return houseInfoList;
+    private Mono<List<HouseInfoDto>> addLatLng(JSONObject responseBody) {
+        JSONArray itemList = responseBody.getJSONObject("items").getJSONArray("item");
+        return Flux.fromIterable(itemList)
+                .filter(item -> !isContainComma((JSONObject) item))
+                .flatMap(item -> translateAndProcessItem((JSONObject) item))
+                .collectList();
     }
 
-    private List<Mono<HouseInfoDto>> getHouseInfo(JSONArray itemList){
-        List<Mono<HouseInfoDto>> houseInfo = new ArrayList<>();
-
-        for (int i = 0; i < itemList.length(); i++) {
-            JSONObject item = itemList.getJSONObject(i);
-
-            if (isContainComma(item)) {
-                continue;
-            }
-
-            JSONObject translatedItem = translateJsonKey(item);
-            Mono<CoordinatesDto> coordinatesDtoMono = getLatLng(getLocation(item));
-            Mono<HouseInfoDto> houseInfoMono = coordinatesDtoMono.flatMap(coordinatesDto -> {
-                translatedItem.put(LNG, coordinatesDto.x());
-                translatedItem.put(LAT, coordinatesDto.y());
-                try {
-                    return Mono.just(objectMapper.readValue(translatedItem.toString(), HouseInfoDto.class));
-                } catch (IOException e) {
-                    log.error("Error processing JSON: {}", e.getMessage());
-                    return Mono.error(e);
-                }
-            });
-
-            houseInfo.add(houseInfoMono);
-
-        }
-
-        return houseInfo;
+    private Mono<HouseInfoDto> translateAndProcessItem(JSONObject item) {
+        JSONObject translatedItem = translateJsonKey(item);
+        String location = getLocation(item);
+        return getLatLng(location)
+                .map(coordinatesDto -> {
+                    translatedItem.put(LNG, coordinatesDto.x());
+                    translatedItem.put(LAT, coordinatesDto.y());
+                    try {
+                        return objectMapper.readValue(translatedItem.toString(), HouseInfoDto.class);
+                    } catch (IOException e) {
+                        log.error("Error processing JSON: {}", e.getMessage());
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
-    private boolean isContainComma(JSONObject item){
-        String locationOfAgency = item.getString(LOCAL_OF_AGENCY.getKoreanKey());
-        String legalBuilding = item.getString(LEGAL_BUILDING.getKoreanKey());
-        String roadName = item.getString(ROAD_NAME.getKoreanKey());
-        String roadNameBuildingCode = item.getString(ROAD_NAME_BUILDING_CODE.getKoreanKey()).replace("0", "");
-
+    private boolean isContainComma(JSONObject item) {
+        String locationOfAgency = item.optString(LOCAL_OF_AGENCY.getKoreanKey(), "");
+        String legalBuilding = String.valueOf(item.opt(LEGAL_BUILDING.getKoreanKey()));
+        String roadName = item.optString(ROAD_NAME.getKoreanKey(), "");
+        String roadNameBuildingCode = item.optString(ROAD_NAME_BUILDING_CODE.getKoreanKey(), "").replace("0", "");
         String location = String.join(" ", locationOfAgency, legalBuilding, roadName, roadNameBuildingCode);
-        if (location.contains(",")) {
-            return true;
-        }
-
-        return false;
+        return location.contains(",");
     }
 
     private Mono<CoordinatesDto> getLatLng(String location) {
         String apiKey = String.join(" ", KakaoParams.KAKAO_AK.getKey() + kaKaoProperties.secret());
-
-        Map<String, String> params = Map.of(
-                KAKAO_QUERY.getKey(), location
-        );
-
+        Map<String, String> params = Map.of(KAKAO_QUERY.getKey(), location);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set(AUTH.getKey(), apiKey);
         UriComponents url = makeUri(kaKaoProperties.host(), apiKey, params);
@@ -165,11 +146,7 @@ public class HouseMapService {
     private UriComponents makeUri(String host, String apiKey, Map<String, String> params){
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(host)
                 .queryParam(SERVICE_KEY.getKey(), apiKey);
-
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            builder.queryParam(entry.getKey(), entry.getValue());
-        }
-
+        params.forEach(builder::queryParam);
         return builder.build();
     }
 
@@ -179,7 +156,6 @@ public class HouseMapService {
         for (AptKey aptKey : AptKey.values()) {
             String englishKey = aptKey.getEnglishKey();
             String koreanKey = aptKey.getKoreanKey();
-
             if (item.has(koreanKey)) {
                 Object value = item.get(koreanKey);
                 translateItem.put(englishKey, value);
