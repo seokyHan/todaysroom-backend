@@ -44,28 +44,26 @@ public class HouseMapService {
     private final HouseDealProperties houseDealProperties;
     private final KaKaoProperties kaKaoProperties;
     private final GugunRepository gugunRepository;
-    private final String PAGE = "1";
-    private final String ROWS = "10";
-    private final String LNG = "lng";
-    private final String LAT = "lat";
-    private final String KAKAO_JSON_KEY = "documents";
+
+    private static int SIZE_OF_LIST = 0;
+    private static final int SIZE_OF_BULK = 100;
     public record CoordinatesDto(String x, String y){}
 
-    public Mono<List<List<HouseInfoDto>>> getHouseInfo(){
+    public Flux<List<HouseInfoDto>> getHouseInfo() {
         return Flux.fromIterable(gugunRepository.findAll().stream().map(GuGunDto::from).collect(Collectors.toUnmodifiableList()))
                 .flatMap(gugun -> {
                     UriComponents url = buildHouseInfoUrl(gugun.guGunCode());
                     return fetchResponse(url)
                             .flatMap(this::extractResponseBody)
-                            .flatMap(responseBody -> addLatLng(responseBody));
-                })
-                .collectList();
+                            .flatMapMany(responseBody -> addLatLng(responseBody))
+                            .collectList();
+                });
     }
 
     private UriComponents buildHouseInfoUrl(String gugunCode){
         Map<String, String> params = Map.of(
-                PAGE_NO.getKey(), PAGE,
-                NUM_OF_ROWS.getKey(), ROWS,
+                PAGE_NO.getKey(), "1",
+                NUM_OF_ROWS.getKey(), "10",
                 LAWD_CD.getKey(), gugunCode,
                 DEAL_YMD.getKey(), "202402"
         );
@@ -84,15 +82,17 @@ public class HouseMapService {
     private Mono<JSONObject> extractResponseBody(JSONObject response) {
         return Mono.justOrEmpty(response.getJSONObject("response"))
                 .filterWhen(body -> Mono.just(body.has("body")))
-                .switchIfEmpty(Mono.empty());
+                .map(body -> body.getJSONObject("body"));
     }
 
-    private Mono<List<HouseInfoDto>> addLatLng(JSONObject responseBody) {
-        JSONArray itemList = responseBody.getJSONObject("items").getJSONArray("item");
+    private Flux<HouseInfoDto> addLatLng(JSONObject responseBody) {
+        JSONObject itemsObject = responseBody.optJSONObject("items");
+        if (itemsObject == null) return Flux.empty();
+
+        JSONArray itemList = itemsObject.getJSONArray("item");
         return Flux.fromIterable(itemList)
                 .filter(item -> !isContainComma((JSONObject) item))
-                .flatMap(item -> translateAndProcessItem((JSONObject) item))
-                .collectList();
+                .flatMap(item -> translateAndProcessItem((JSONObject) item));
     }
 
     private Mono<HouseInfoDto> translateAndProcessItem(JSONObject item) {
@@ -100,8 +100,9 @@ public class HouseMapService {
         String location = getLocation(item);
         return getLatLng(location)
                 .map(coordinatesDto -> {
-                    translatedItem.put(LNG, coordinatesDto.x());
-                    translatedItem.put(LAT, coordinatesDto.y());
+                    translatedItem.put("lng", coordinatesDto.x());
+                    translatedItem.put("lat", coordinatesDto.y());
+                    SIZE_OF_LIST++;
                     try {
                         return objectMapper.readValue(translatedItem.toString(), HouseInfoDto.class);
                     } catch (IOException e) {
@@ -127,20 +128,21 @@ public class HouseMapService {
         httpHeaders.set(AUTH.getKey(), apiKey);
         UriComponents url = makeUri(kaKaoProperties.host(), apiKey, params);
 
-        Mono<CoordinatesDto> coordinatesDto = webClient.get()
+        return webClient.get()
                 .uri(url.toString())
                 .headers(headers -> headers.addAll(httpHeaders))
                 .retrieve()
                 .bodyToMono(String.class)
                 .map(JSONObject::new)
                 .flatMap(json -> {
-                    JSONArray documents = json.getJSONArray(KAKAO_JSON_KEY);
-                    String x = documents.getJSONObject(0).getString(LONGITUDE.getKey());
-                    String y = documents.getJSONObject(0).getString(LATITUDE.getKey());
-                    return Mono.just(new CoordinatesDto(x,y));
+                    return Mono.justOrEmpty(json.optJSONArray("documents"))
+                            .filterWhen(documents -> Mono.just(documents != null && documents.length() > 0))
+                            .flatMap(documents -> {
+                                String x = documents.getJSONObject(0).getString(LONGITUDE.getKey());
+                                String y = documents.getJSONObject(0).getString(LATITUDE.getKey());
+                                return Mono.just(new CoordinatesDto(x, y));
+                            });
                 });
-
-        return coordinatesDto;
     }
 
     private UriComponents makeUri(String host, String apiKey, Map<String, String> params){
