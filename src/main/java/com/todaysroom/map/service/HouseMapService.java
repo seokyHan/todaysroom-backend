@@ -3,6 +3,8 @@ package com.todaysroom.map.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.todaysroom.batch.dto.GuGunDto;
+import com.todaysroom.batch.repository.HouseInfoBulkRepository;
+import com.todaysroom.map.entity.HouseInfo;
 import com.todaysroom.map.props.HouseDealProperties;
 import com.todaysroom.map.props.KaKaoProperties;
 import com.todaysroom.map.dto.HouseInfoDto;
@@ -43,20 +45,39 @@ public class HouseMapService {
     private final ObjectMapper objectMapper;
     private final HouseDealProperties houseDealProperties;
     private final KaKaoProperties kaKaoProperties;
+    private final HouseInfoBulkRepository houseInfoBulkRepository;
     private final GugunRepository gugunRepository;
 
     private static int SIZE_OF_LIST = 0;
     private static final int SIZE_OF_BULK = 100;
     public record CoordinatesDto(String x, String y){}
 
-    public Flux<List<HouseInfoDto>> getHouseInfo() {
-        return Flux.fromIterable(gugunRepository.findAll().stream().map(GuGunDto::from).collect(Collectors.toUnmodifiableList()))
+    public void getHouseInfo() {
+        List<HouseInfo> houseInfoList = new ArrayList<>();
+//        gugunRepository.findAll().stream().map(GuGunDto::from).collect(Collectors.toUnmodifiableList())
+        List<String> dummyList = List.of("11110","11140","11170","11200","11215","11230","11260","11290","11305","11320",
+                "11350","11380","11410","11440","11500","11530","11545","11560","11590","11620",
+                "11650","11680","11710","11740","26110","26140","26170","26200","26230","26260");
+        Flux.fromIterable(dummyList)
                 .flatMap(gugun -> {
-                    UriComponents url = buildHouseInfoUrl(gugun.guGunCode());
+                    UriComponents url = buildHouseInfoUrl(gugun);
                     return fetchResponse(url)
                             .flatMap(this::extractResponseBody)
                             .flatMapMany(responseBody -> addLatLng(responseBody))
-                            .collectList();
+                            .doOnNext(houseInfoDto -> {
+                                houseInfoList.add(houseInfoDto.toHouseInfoEntity());
+                                SIZE_OF_LIST++;
+                                if(SIZE_OF_LIST % SIZE_OF_BULK == 0){
+                                    houseInfoBulkRepository.saveAll(houseInfoList);
+                                    houseInfoList.clear();
+                                }
+
+                            });
+                })
+                .doOnComplete(() -> {
+                    if(!houseInfoList.isEmpty()){
+                        houseInfoBulkRepository.saveAll(houseInfoList);
+                    }
                 });
     }
 
@@ -134,15 +155,13 @@ public class HouseMapService {
                 .retrieve()
                 .bodyToMono(String.class)
                 .map(JSONObject::new)
-                .flatMap(json -> {
-                    return Mono.justOrEmpty(json.optJSONArray("documents"))
-                            .filterWhen(documents -> Mono.just(documents != null && documents.length() > 0))
-                            .flatMap(documents -> {
-                                String x = documents.getJSONObject(0).getString(LONGITUDE.getKey());
-                                String y = documents.getJSONObject(0).getString(LATITUDE.getKey());
-                                return Mono.just(new CoordinatesDto(x, y));
-                            });
-                });
+                .flatMap(json -> Mono.justOrEmpty(json.optJSONArray("documents"))
+                        .filterWhen(documents -> Mono.just(documents != null && documents.length() > 0))
+                        .flatMap(documents -> {
+                            String x = documents.getJSONObject(0).getString(LONGITUDE.getKey());
+                            String y = documents.getJSONObject(0).getString(LATITUDE.getKey());
+                            return Mono.just(new CoordinatesDto(x, y));
+                        }));
     }
 
     private UriComponents makeUri(String host, String apiKey, Map<String, String> params){

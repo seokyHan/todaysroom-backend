@@ -1,6 +1,9 @@
 package com.todaysroom.map.dto;
 
-public record HouseInfoDto(Double exclusiveArea,
+import com.todaysroom.file.entity.UserFiles;
+import com.todaysroom.map.entity.HouseInfo;
+
+public record HouseInfoDto(double exclusiveArea,
                            String buildYear,
                            String legal,
                            String roadName,
@@ -15,5 +18,21 @@ public record HouseInfoDto(Double exclusiveArea,
                            String aptName
                            ) {
 
+    public HouseInfo toHouseInfoEntity(){
+        return HouseInfo.builder()
+                .exclusiveArea(exclusiveArea)
+                .buildYear(buildYear)
+                .legal(legal)
+                .roadName(roadName)
+                .year(year)
+                .month(month)
+                .day(day)
+                .lng(lng)
+                .lat(lat)
+                .amount(amount)
+                .locationOfAgency(locationOfAgency)
+                .aptName(aptName)
+                .build();
+    }
 
 }

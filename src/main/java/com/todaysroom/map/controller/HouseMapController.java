@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.UnsupportedEncodingException;
@@ -23,8 +24,8 @@ public class HouseMapController {
     private final HouseMapService houseMapService;
 
     @GetMapping("/getHouseInfo")
-    public ResponseEntity<Mono<List<HouseInfoDto>>> houseInfo() {
-
-        return ResponseEntity.ok(houseMapService.getHouseInfo());
+    public ResponseEntity<String> houseInfo() {
+        houseMapService.getHouseInfo();
+        return ResponseEntity.ok("success");
     }
 }
