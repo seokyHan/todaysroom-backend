@@ -1,9 +1,9 @@
 package com.todaysroom.map.dto;
 
-import com.todaysroom.file.entity.UserFiles;
 import com.todaysroom.map.entity.HouseInfo;
 
-public record HouseInfoDto(double exclusiveArea,
+public record HouseInfoDto(int localCode,
+                           double exclusiveArea,
                            String buildYear,
                            String legal,
                            String roadName,
@@ -20,10 +20,12 @@ public record HouseInfoDto(double exclusiveArea,
 
     public HouseInfo toHouseInfoEntity(){
         return HouseInfo.builder()
+                .localCode(localCode)
                 .exclusiveArea(exclusiveArea)
                 .buildYear(buildYear)
                 .legal(legal)
                 .roadName(roadName)
+                .floor(floor)
                 .year(year)
                 .month(month)
                 .day(day)

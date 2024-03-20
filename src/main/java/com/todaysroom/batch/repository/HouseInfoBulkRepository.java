@@ -1,6 +1,5 @@
 package com.todaysroom.batch.repository;
 
-import com.todaysroom.map.dto.HouseInfoDto;
 import com.todaysroom.map.entity.HouseInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -16,13 +15,13 @@ import java.util.List;
 public class HouseInfoBulkRepository {
 
     private static final String INSERT_QUERY = """
-            INSERT INTO HOUSE_INFO (EXCLUSIVE_AREA, BUILD_YEAR, LEGAL, ROAD_NAME, FLOOR , YEAR,
-                                    MONTH, DAY, LNG, LAT , AMOUNT, LOCATION_OF_AGENCY
-                                    APT_NAME, INSERT_DATE)
+            INSERT INTO HOUSE_INFO (LOCAL_CODE, EXCLUSIVE_AREA, BUILD_YEAR, LEGAL, ROAD_NAME, FLOOR,
+                                    YEAR, MONTH, DAY, LNG, LAT , AMOUNT,
+                                    LOCATION_OF_AGENCY, APT_NAME, INSERT_DATE)
                       VALUES (
                                ?,?,?,?,?,?,
                                ?,?,?,?,?,?,
-                               ?,NOW()
+                               ?,?,now()
                              )
             """;
 
@@ -34,6 +33,7 @@ public class HouseInfoBulkRepository {
             @Override
             public void setValues(PreparedStatement ps, int rowIndex) throws SQLException {
                 int idx = 0;
+                ps.setInt(++idx, houseInfoList.get(rowIndex).getLocalCode());
                 ps.setDouble(++idx, houseInfoList.get(rowIndex).getExclusiveArea());
                 ps.setString(++idx, houseInfoList.get(rowIndex).getBuildYear());
                 ps.setString(++idx, houseInfoList.get(rowIndex).getLegal());
