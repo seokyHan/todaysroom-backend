@@ -105,6 +105,12 @@ kakao:
     host: https://dapi.kakao.com/v2/local/search/address.json
     secret: 6f3ec3c70b15ed635ba3c7f0cc46ae82
 
+batch:
+  file-delete:
+    interval: "0 0 18 * * ?" # 초 / 분 / 시 / 일 / 월 / 요일
+  house-deal:
+    interval: "0 0 4 28 * ?" # 초 / 분 / 시 / 일 / 월 / 요일
+
 # Log
 logging:
   level:
