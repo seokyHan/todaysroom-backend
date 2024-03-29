@@ -1,5 +1,7 @@
 package com.todaysroom.global.security.config;
 
+import com.todaysroom.global.security.filter.ExceptionHandlerFilter;
+import com.todaysroom.global.security.filter.JwtFilter;
 import com.todaysroom.oauth2.handler.OAuth2LoginFailureHandler;
 import com.todaysroom.oauth2.handler.OAuth2LoginSuccessHandler;
 import com.todaysroom.oauth2.service.CustomOAuth2UserService;
@@ -8,6 +10,7 @@ import com.todaysroom.global.security.handler.JwtAuthenticationEntryPoint;
 import com.todaysroom.global.security.jwt.TokenProvider;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authorization.AuthorityAuthorizationManager;
@@ -21,6 +24,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -45,15 +49,16 @@ public class SecurityConfig{
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final ExceptionHandlerFilter exceptionHandlerFilter;
 
     public static final String[] WHITE_LIST = {
+            "/map/recommend/",
+            "/users/login",
             "/users/signup",
             "/users/email-check",
-            "/users/login",
             "/users/signup",
             "/users/reissue",
             "/news",
-            "/map/getHouseInfo",
     };
 
     @Bean
@@ -83,8 +88,7 @@ public class SecurityConfig{
         AuthorityAuthorizationManager<RequestAuthorizationContext> admin = AuthorityAuthorizationManager.hasAuthority("ROLE_ADMIN");
         AntPathRequestMatcher[] antPathRequestMatchers = stream(WHITE_LIST).map(AntPathRequestMatcher::antMatcher).toArray(AntPathRequestMatcher[]::new);
 
-        http.formLogin().disable()
-                .httpBasic().disable()
+        http
                 .cors().configurationSource(corsConfigurationSource()).and()
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth ->
@@ -92,20 +96,18 @@ public class SecurityConfig{
                                 .requestMatchers(antPathRequestMatchers).permitAll()
                                 .requestMatchers(getUserMatchers()).access(user)
                                 .requestMatchers(getAdminMatcher()).access(admin)
-                                .anyRequest()
-                                .denyAll()
+                                .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptionHandling ->
                     exceptionHandling.accessDeniedHandler(jwtAccessDeniedHandler)
                                      .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .headers()
-                .frameOptions()
-                .sameOrigin()
-                .and()
-                .apply(new JwtSecurityConfig(tokenProvider))
-                .and()
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .headers(AbstractHttpConfigurer::disable)
+                .addFilterBefore(new JwtFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(exceptionHandlerFilter, JwtFilter.class)
                 //== 소셜 로그인 설정 ==//
                 .oauth2Login()
                 .successHandler(oAuth2LoginSuccessHandler) // 동의하고 계속하기를 눌렀을 때 Handler 설정
@@ -122,7 +124,7 @@ public class SecurityConfig{
 
     @NotNull
     private RequestMatcher[] getUserMatchers() {
-        return new RequestMatcher[]{antMatcher(POST, "/proxy/**"), antMatcher(GET, "/codes/**"), antMatcher(POST, "/files/**"), antMatcher(POST, "/batch/**")};
+        return new RequestMatcher[]{antMatcher(POST, "/users/**"), antMatcher(GET, "/codes/**"), antMatcher(POST, "/files/**"), antMatcher(POST, "/batch/**")};
     }
 
     @NotNull
