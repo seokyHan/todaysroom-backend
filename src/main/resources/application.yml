@@ -111,6 +111,16 @@ batch:
   house-deal:
     interval: "0 0 4 28 * ?" # 초 / 분 / 시 / 일 / 월 / 요일
 
+exclude:
+  path :
+    /map/recommend,
+    /users/login,
+    /users/signup,
+    /users/email-check,
+    /users/signup,
+    /users/reissue,
+    /news
+
 # Log
 logging:
   level:

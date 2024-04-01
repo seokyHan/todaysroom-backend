@@ -2,6 +2,7 @@ package com.todaysroom.global.security.config;
 
 import com.todaysroom.global.security.filter.ExceptionHandlerFilter;
 import com.todaysroom.global.security.filter.JwtFilter;
+import com.todaysroom.global.security.props.ExcludeProperties;
 import com.todaysroom.oauth2.handler.OAuth2LoginFailureHandler;
 import com.todaysroom.oauth2.handler.OAuth2LoginSuccessHandler;
 import com.todaysroom.oauth2.service.CustomOAuth2UserService;
@@ -42,6 +43,7 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig{
     private final TokenProvider tokenProvider;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -50,16 +52,7 @@ public class SecurityConfig{
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final ExceptionHandlerFilter exceptionHandlerFilter;
-
-    public static final String[] WHITE_LIST = {
-            "/map/recommend/",
-            "/users/login",
-            "/users/signup",
-            "/users/email-check",
-            "/users/signup",
-            "/users/reissue",
-            "/news",
-    };
+    private final ExcludeProperties excludeProperties;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -86,7 +79,7 @@ public class SecurityConfig{
     public SecurityFilterChain config(HttpSecurity http) throws Exception {
         AuthorityAuthorizationManager<RequestAuthorizationContext> user = AuthorityAuthorizationManager.hasAuthority("ROLE_USER");
         AuthorityAuthorizationManager<RequestAuthorizationContext> admin = AuthorityAuthorizationManager.hasAuthority("ROLE_ADMIN");
-        AntPathRequestMatcher[] antPathRequestMatchers = stream(WHITE_LIST).map(AntPathRequestMatcher::antMatcher).toArray(AntPathRequestMatcher[]::new);
+        AntPathRequestMatcher[] antPathRequestMatchers = stream(excludeProperties.path()).map(AntPathRequestMatcher::antMatcher).toArray(AntPathRequestMatcher[]::new);
 
         http
                 .cors().configurationSource(corsConfigurationSource()).and()
@@ -106,7 +99,7 @@ public class SecurityConfig{
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .headers(AbstractHttpConfigurer::disable)
-                .addFilterBefore(new JwtFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtFilter(tokenProvider, excludeProperties), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(exceptionHandlerFilter, JwtFilter.class)
                 //== 소셜 로그인 설정 ==//
                 .oauth2Login()

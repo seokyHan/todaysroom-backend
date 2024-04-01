@@ -1,6 +1,7 @@
 package com.todaysroom.global.common.config.props;
 
 import com.todaysroom.global.common.config.redis.props.RedisProperties;
+import com.todaysroom.global.security.props.ExcludeProperties;
 import com.todaysroom.global.security.props.JWTProperties;
 import com.todaysroom.map.props.HouseDealProperties;
 import com.todaysroom.map.props.KaKaoProperties;
@@ -12,7 +13,8 @@ import org.springframework.context.annotation.Configuration;
         JWTProperties.class,
         HouseDealProperties.class,
         KaKaoProperties.class,
-        RedisProperties.class
+        RedisProperties.class,
+        ExcludeProperties.class
 })
 public class PropertiesConfiguration {
 }
