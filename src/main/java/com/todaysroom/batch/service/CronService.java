@@ -2,7 +2,7 @@ package com.todaysroom.batch.service;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.todaysroom.batch.dto.GuGunDto;
+import com.todaysroom.map.dto.GuGunDto;
 import com.todaysroom.batch.repository.HouseInfoBulkRepository;
 import com.todaysroom.file.entity.UserFiles;
 import com.todaysroom.file.repository.UserFilesRepository;
