@@ -1,5 +1,10 @@
 server:
   port: 9000
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force-response: true
 
 
 spring:
@@ -113,6 +118,7 @@ batch:
 
 exclude:
   path :
+    /map/batch,
     /map/recommend,
     /users/login,
     /users/signup,
