@@ -7,8 +7,6 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface DongRepository extends JpaRepository<Dong, Long> {
-
-
+public interface DongRepository extends JpaRepository<Dong, Long>, DongRepositoryCustom{
 
 }

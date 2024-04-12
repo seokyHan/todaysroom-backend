@@ -18,6 +18,23 @@ public record HouseInfoDto(int localCode,
                            String aptName
                            ) {
 
+    public static HouseInfoDto from (HouseInfo houseInfo){
+        return new HouseInfoDto(houseInfo.getLocalCode(),
+                houseInfo.getExclusiveArea(),
+                houseInfo.getBuildYear(),
+                houseInfo.getLegal(),
+                houseInfo.getRoadName(),
+                houseInfo.getFloor(),
+                houseInfo.getYear(),
+                houseInfo.getMonth(),
+                houseInfo.getDay(),
+                houseInfo.getLng(),
+                houseInfo.getLat(),
+                houseInfo.getAmount(),
+                houseInfo.getLocationOfAgency(),
+                houseInfo.getAptName());
+    }
+
     public HouseInfo toHouseInfoEntity(){
         return HouseInfo.builder()
                 .localCode(localCode)
