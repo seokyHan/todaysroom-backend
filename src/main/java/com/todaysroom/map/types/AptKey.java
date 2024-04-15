@@ -38,7 +38,7 @@ public enum AptKey {
     RELEASE_STATUS("releaseStatus","해제여부"),
     FLOOR("floor","층"),
     DAY("day","일"),
-    ROAD_NAME_BUILDING_CODE("roadNameBuildingCode","도로명건물본번호코드");
+    ROAD_NAME_BUILDING_CODE("aptCode","도로명건물본번호코드");
 
     private final String englishKey;
     private final String koreanKey;

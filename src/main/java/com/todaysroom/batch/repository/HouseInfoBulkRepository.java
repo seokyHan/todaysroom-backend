@@ -15,13 +15,13 @@ import java.util.List;
 public class HouseInfoBulkRepository {
 
     private static final String INSERT_QUERY = """
-            INSERT INTO HOUSE_INFO (LOCAL_CODE, EXCLUSIVE_AREA, BUILD_YEAR, LEGAL, ROAD_NAME, FLOOR,
-                                    YEAR, MONTH, DAY, LNG, LAT , AMOUNT,
-                                    LOCATION_OF_AGENCY, APT_NAME, INSERT_DATE)
+            INSERT INTO HOUSE_INFO (APT_CODE, LOCAL_CODE, EXCLUSIVE_AREA, BUILD_YEAR, LEGAL, ROAD_NAME,
+                                    FLOOR, YEAR, MONTH, DAY, LNG, LAT,
+                                    AMOUNT, LOCATION_OF_AGENCY, APT_NAME, INSERT_DATE)
                       VALUES (
                                ?,?,?,?,?,?,
                                ?,?,?,?,?,?,
-                               ?,?,now()
+                               ?,?,?,now()
                              )
             """;
 
@@ -33,6 +33,7 @@ public class HouseInfoBulkRepository {
             @Override
             public void setValues(PreparedStatement ps, int rowIndex) throws SQLException {
                 int idx = 0;
+                ps.setString(++idx, houseInfoList.get(rowIndex).getAptCode());
                 ps.setInt(++idx, houseInfoList.get(rowIndex).getLocalCode());
                 ps.setDouble(++idx, houseInfoList.get(rowIndex).getExclusiveArea());
                 ps.setString(++idx, houseInfoList.get(rowIndex).getBuildYear());

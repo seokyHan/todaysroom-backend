@@ -3,6 +3,7 @@ package com.todaysroom.map.dto;
 import com.todaysroom.map.entity.HouseInfo;
 
 public record HouseInfoDto(int localCode,
+                           String aptCode,
                            double exclusiveArea,
                            String buildYear,
                            String legal,
@@ -20,6 +21,7 @@ public record HouseInfoDto(int localCode,
 
     public static HouseInfoDto from (HouseInfo houseInfo){
         return new HouseInfoDto(houseInfo.getLocalCode(),
+                houseInfo.getAptCode(),
                 houseInfo.getExclusiveArea(),
                 houseInfo.getBuildYear(),
                 houseInfo.getLegal(),
@@ -37,6 +39,7 @@ public record HouseInfoDto(int localCode,
 
     public HouseInfo toHouseInfoEntity(){
         return HouseInfo.builder()
+                .aptCode(aptCode)
                 .localCode(localCode)
                 .exclusiveArea(exclusiveArea)
                 .buildYear(buildYear)

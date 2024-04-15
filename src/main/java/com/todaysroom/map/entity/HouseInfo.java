@@ -20,6 +20,9 @@ public class HouseInfo {
     @Id
     private Long id;
 
+    @Column(name = "APT_CODE")
+    private String aptCode;
+
     @Column(name = "LOCAL_CODE")
     private int localCode;
 
@@ -66,8 +69,9 @@ public class HouseInfo {
     private Timestamp insertDate;
 
     @Builder
-    public HouseInfo(Long id, int localCode, Double exclusiveArea, String buildYear, String legal, String roadName, int floor, int year, int month, int day, Double lng, Double lat, String amount, String locationOfAgency, String aptName, Timestamp insertDate) {
+    public HouseInfo(Long id, String aptCode, int localCode, Double exclusiveArea, String buildYear, String legal, String roadName, int floor, int year, int month, int day, Double lng, Double lat, String amount, String locationOfAgency, String aptName, Timestamp insertDate) {
         this.id = id;
+        this.aptCode = aptCode;
         this.localCode = localCode;
         this.exclusiveArea = exclusiveArea;
         this.buildYear = buildYear;
