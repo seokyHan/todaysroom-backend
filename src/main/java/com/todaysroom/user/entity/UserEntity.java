@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.todaysroom.global.common.BaseTimeEntity;
 import com.todaysroom.inquiry.entity.Inquiry;
 import com.todaysroom.global.types.Role;
+import com.todaysroom.likeHouse.entity.LikeHouse;
 import com.todaysroom.oauth2.types.SocialType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -55,6 +56,11 @@ public class UserEntity extends BaseTimeEntity {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     @JsonManagedReference(value = "user-inquiry")
     private List<Inquiry> inquiries;
+
+    @OneToMany(cascade = CascadeType.REMOVE)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JsonManagedReference(value = "user-liked")
+    private List<LikeHouse> likedAptCodes;
 
 
     //OAuth2
