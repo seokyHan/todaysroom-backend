@@ -55,4 +55,14 @@ public class HouseMapController {
     public ResponseEntity<List<HouseInfoDto>> userLikedHouseByGuGun(@RequestBody MapRequest mapRequest, @RequestParam("userId") Long userId){
         return ResponseEntity.ok(houseMapService.getUserLikedHouseListByGuGun(mapRequest, userId));
     }
+
+    @GetMapping("/dong/liked")
+    public ResponseEntity<List<HouseInfoDto>> userLikedHouseByDong(@RequestBody MapRequest mapRequest, @RequestParam("userId") Long userId){
+        return ResponseEntity.ok(houseMapService.getUserLikedHouseListByDong(mapRequest, userId));
+    }
+
+    @GetMapping("/dong-search/liked")
+    public ResponseEntity<List<HouseInfoDto>> userLikedHouseByDongSearch(@RequestBody MapRequest mapRequest, @RequestParam("userId") Long userId){
+        return ResponseEntity.ok(houseMapService.getUserLikedHouseListByDongSearch(mapRequest.dongName(), userId));
+    }
 }

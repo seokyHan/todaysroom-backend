@@ -74,11 +74,28 @@ public class HouseMapService {
         String locationOfAgency = String.join(" ",  mapRequest.sidoName(), mapRequest.gugunName());
         List<HouseInfoDto> houseInfoList = houseInfoRepository.findHouseInfoListByGuGun(locationOfAgency)
                 .stream()
-                .map(houseInfo -> {
-                    HouseInfoDto dto = HouseInfoDto.from(houseInfo);
-                    dto = HouseInfoDto.from(houseInfo).updateLikedStatus(likedStatusMap.containsKey(dto.aptCode()));
-                    return dto;
-                })
+                .map(houseInfo -> HouseInfoDto.of(houseInfo, likedStatusMap.containsKey(houseInfo.getAptCode())))
+                .collect(Collectors.toList());
+
+        return houseInfoList;
+    }
+
+    public List<HouseInfoDto> getUserLikedHouseListByDong(MapRequest mapRequest, Long userId){
+        Map<String, Boolean> likedStatusMap = setLikedStatus(userId);
+        String locationOfAgency = String.join(" ",  mapRequest.sidoName(), mapRequest.gugunName());
+        List<HouseInfoDto> houseInfoList = houseInfoRepository.findHouseInfoListByDong(locationOfAgency, mapRequest.dongName())
+                .stream()
+                .map(houseInfo -> HouseInfoDto.of(houseInfo, likedStatusMap.containsKey(houseInfo.getAptCode())))
+                .collect(Collectors.toList());
+
+        return houseInfoList;
+    }
+
+    public List<HouseInfoDto> getUserLikedHouseListByDongSearch(String dongName, Long userId){
+        Map<String, Boolean> likedStatusMap = setLikedStatus(userId);
+        List<HouseInfoDto> houseInfoList = houseInfoRepository.findHouseInfoListByDongSearch(dongName)
+                .stream()
+                .map(houseInfo -> HouseInfoDto.of(houseInfo, likedStatusMap.containsKey(houseInfo.getAptCode())))
                 .collect(Collectors.toList());
 
         return houseInfoList;

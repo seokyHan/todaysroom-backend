@@ -16,9 +16,30 @@ public record HouseInfoDto(int localCode,
                            double lat,
                            String amount,
                            String locationOfAgency,
-                           String aptName
+                           String aptName,
+                           boolean likedStatus
                            ) {
 
+    public static HouseInfoDto of(HouseInfo houseInfo, boolean likedStatus) {
+        return new HouseInfoDto(
+                houseInfo.getLocalCode(),
+                houseInfo.getAptCode(),
+                houseInfo.getExclusiveArea(),
+                houseInfo.getBuildYear(),
+                houseInfo.getLegal(),
+                houseInfo.getRoadName(),
+                houseInfo.getFloor(),
+                houseInfo.getYear(),
+                houseInfo.getMonth(),
+                houseInfo.getDay(),
+                houseInfo.getLng(),
+                houseInfo.getLat(),
+                houseInfo.getAmount(),
+                houseInfo.getLocationOfAgency(),
+                houseInfo.getAptName(),
+                likedStatus
+        );
+    }
     public static HouseInfoDto from (HouseInfo houseInfo){
         return new HouseInfoDto(houseInfo.getLocalCode(),
                 houseInfo.getAptCode(),
@@ -34,7 +55,8 @@ public record HouseInfoDto(int localCode,
                 houseInfo.getLat(),
                 houseInfo.getAmount(),
                 houseInfo.getLocationOfAgency(),
-                houseInfo.getAptName());
+                houseInfo.getAptName(),
+                false);
     }
 
     public HouseInfo toHouseInfoEntity(){
