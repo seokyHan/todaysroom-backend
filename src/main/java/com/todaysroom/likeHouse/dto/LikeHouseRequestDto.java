@@ -1,8 +1,9 @@
 package com.todaysroom.likeHouse.dto;
 
-import com.todaysroom.likeHouse.entity.LikeHouse;
+import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank;
 
 public record LikeHouseRequestDto(Long userId,
-                                  String aptCode) {
+                                  @NotBlank(message = "코드가 없습니다.") String aptCode) {
 
 }

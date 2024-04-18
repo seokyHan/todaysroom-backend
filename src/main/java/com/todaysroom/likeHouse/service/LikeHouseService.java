@@ -57,4 +57,11 @@ public class LikeHouseService {
         return likeHouseRepository.save(likeHouse).getId();
     }
 
+    @Transactional
+    public void deleteLikedHouse(LikeHouseRequestDto likeHouseRequestDto){
+        if(likeHouseRepository.findByUserIdAndAptCode(likeHouseRequestDto.userId(), likeHouseRequestDto.aptCode()).isEmpty()){
+            throw new CustomException(NOT_FOUND, "존재하지 않는 관심 목록 입니다.");
+        }
+        likeHouseRepository.deleteByUserIdAndAptCode(likeHouseRequestDto.userId(), likeHouseRequestDto.aptCode());
+    }
 }
