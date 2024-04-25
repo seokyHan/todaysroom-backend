@@ -69,6 +69,10 @@ public class HouseMapService {
         return houseInfoList.stream().map(HouseInfoDto::from).collect(Collectors.toList());
     }
 
+    public List<HouseInfo> getLikedHouseInfoList(List<String> aptCode){
+        return houseInfoRepository.findLikedHouseInfoList(aptCode);
+    }
+
     public List<HouseInfoDto> getUserLikedHouseListByGuGun(MapRequest mapRequest, Long userId){
         Map<String, Boolean> likedStatusMap = setLikedStatus(userId);
         String locationOfAgency = String.join(" ",  mapRequest.sidoName(), mapRequest.gugunName());

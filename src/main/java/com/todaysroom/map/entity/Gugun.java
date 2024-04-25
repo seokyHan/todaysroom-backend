@@ -22,4 +22,11 @@ public class Gugun {
 
     @Column(name = "GUGUN_NAME")
     private String gugunName;
+
+    @Column(name = "SIDO_NAME")
+    private String sidoName;
+
+    @Column(name = "SIDO_CODE")
+    private String sidoCode;
+
 }

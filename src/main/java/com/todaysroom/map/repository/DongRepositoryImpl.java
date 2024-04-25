@@ -24,6 +24,7 @@ public class DongRepositoryImpl implements DongRepositoryCustom{
         return queryFactory.select(dong)
                 .from(dong)
                 .where(dong.sidoName.eq(sidoName).and(dong.gugunName.eq(guGunName)))
+                .groupBy(dong.dongName)
                 .orderBy(dong.dongName.asc())
                 .fetch();
     }
