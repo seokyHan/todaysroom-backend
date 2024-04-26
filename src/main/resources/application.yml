@@ -85,7 +85,8 @@ spring:
 jwt:
   host: todaysroom.com
   secret: q1ZST0pl2057VfOGrlBjo6bPcx8L9IZaJx+BtDVHxQpNBS9IKyahbulcV/2mgRzipS/B0AZxEmlBpTDsSi2zxGuRylEwRLpSKo6dlRt3QeFfNwOM4cUet8K0cMvvTTuVe/i6s6VU0KCpCi6kUuEfg4qpyrMD6MQu8DRMOK24eFxnxFJe04L4wpcG3lmFnS/uo0DLx3l4XE94eypYxFLlpQ==
-  token-validity-in-milliseconds: 3600000
+#  token-validity-in-milliseconds: 3600000
+  token-validity-in-milliseconds: 1000
   refresh-token-validity-in-milliseconds: 12096000
 
 # oauth2 url
@@ -121,6 +122,7 @@ exclude:
     /map/batch,
     /map/recommend,
     /users/login,
+    /users/logout,
     /users/signup,
     /users/email-check,
     /users/signup,
