@@ -14,6 +14,7 @@ import com.todaysroom.global.security.jwt.TokenProvider;
 import com.todaysroom.user.repository.AuthorityRepository;
 import com.todaysroom.user.repository.UserAuthorityRepository;
 import com.todaysroom.user.repository.UserRepository;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -97,13 +98,8 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<UserTokenInfoDto> reissue(HttpServletRequest request) {
-        String headerCookie = request.getHeader(REISSUE_HEADER.getItem());
-        int start = headerCookie.indexOf(HEADER_VALUE.getItem()) + HEADER_VALUE.getItem().length();
-        int end = headerCookie.indexOf(";", start);
-        String cookieRefreshToken = headerCookie.substring(start,end);
-
-        Authentication authentication = tokenProvider.getAuthentication(cookieRefreshToken);
+    public ResponseEntity<UserTokenInfoDto> reissue() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String refreshToken = (String)redisTemplate.opsForValue().get(REFRESHTOKEN_KEY + authentication.getName());
 
         // Redis 저장된 RefreshToken 찾은 후 없으면 401 에러
@@ -122,14 +118,14 @@ public class UserService {
             throw new CustomException(USER_NOT_FOUND, "해당 User를 찾을 수 없습니다.");
         }
 
-        UserTokenInfoDto userTokenInfoDto = generateUserTokenInfo(authentication, userInfo);
+        UserTokenInfoDto responseUserTokenInfo = generateUserTokenInfo(authentication, userInfo);
 
         setTokenInRedis(REFRESHTOKEN_KEY.getItem() + authentication.getName(),
-                userTokenInfoDto.refreshToken(),
-                tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
+                responseUserTokenInfo.refreshToken(),
+                tokenProvider.getExpiration(responseUserTokenInfo.refreshToken()),
                 TimeUnit.MILLISECONDS);
 
-        return setResponseData(userTokenInfoDto);
+        return setResponseData(responseUserTokenInfo);
     }
 
     @Transactional
@@ -196,16 +192,11 @@ public class UserService {
                 .sameSite("None")
                 .httpOnly(true)
                 .build();
-        HttpHeaders httpHeaders = addHttpHeaders(userTokenInfoDto.accessToken(), cookie.toString());
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add(AUTHORIZATION, userTokenInfoDto.accessToken());
+        httpHeaders.add(COOKIE_HEADER.getItem(), cookie.toString());
 
         return new ResponseEntity<>(userTokenInfoDto, httpHeaders, HttpStatus.OK);
-    }
-    private HttpHeaders addHttpHeaders(String accessToken, String refreshToken){
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(AUTHORIZATION, accessToken);
-        httpHeaders.add(COOKIE_HEADER.getItem(), refreshToken);
-
-        return httpHeaders;
     }
 
     private void setTokenInRedis(String key, String value, long expiration, TimeUnit time){
@@ -215,9 +206,9 @@ public class UserService {
 
     private UserTokenInfoDto generateUserTokenInfo(Authentication authentication, UserEntity userEntity) {
         UserTokenInfoDto tokenInfo = tokenProvider.generateToken(authentication);
-        List<String> userAuthorities = userEntity.getAuthorities().stream()
+        String userAuthorities = userEntity.getAuthorities().stream()
                 .map(authority -> authority.getAuth().getAuthorityName())
-                .collect(Collectors.toList());
+                .collect(Collectors.joining(","));
 
         return UserTokenInfoDto.builder()
                 .accessToken(tokenInfo.accessToken())
@@ -232,9 +223,9 @@ public class UserService {
     }
 
     private UserTokenInfoDto generateUserTokenInfo(String accessToken, String refreshToken, UserEntity userEntity) {
-        List<String> userAuthorities = userEntity.getAuthorities().stream()
+        String userAuthorities = userEntity.getAuthorities().stream()
                 .map(authority -> authority.getAuth().getAuthorityName())
-                .collect(Collectors.toList());
+                .collect(Collectors.joining(","));
 
         return UserTokenInfoDto.builder()
                 .accessToken(accessToken)
