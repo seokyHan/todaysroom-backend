@@ -1,5 +1,7 @@
 package com.todaysroom.global.security.jwt;
 
+import com.todaysroom.global.exception.CustomException;
+import com.todaysroom.global.exception.code.AuthResponseCode;
 import com.todaysroom.global.security.jwt.types.TokenType;
 import com.todaysroom.global.security.props.JWTProperties;
 import com.todaysroom.global.types.Role;
@@ -142,21 +144,21 @@ public class TokenProvider{
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
-
             if(redisTemplate.opsForValue().get(token) != null){
                 return false;
             }
 
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-            log.error("잘못된 JWT 서명입니다.");
+            log.error("잘못된 JWT 서명");
+            throw new CustomException(AuthResponseCode.UNAUTHORIZED, "잘못된 토큰 서명");
+        } catch (ExpiredJwtException e) {
+            log.error("만료된 JWT 토큰");
+            throw new CustomException(AuthResponseCode.TOKEN_EXPIRED);
         } catch (UnsupportedJwtException e) {
-            log.error("지원되지 않는 JWT 토큰입니다.");
-        } catch (IllegalArgumentException e) {
-            log.error("JWT 토큰이 잘못되었습니다.");
+            log.error("지원되지 않는 JWT 토큰");
+            throw new CustomException(AuthResponseCode.UNAUTHORIZED, "지원되지 않는 토큰");
         }
-        return false;
-
     }
 
     private Date getTokenExpiration(final TokenType tokenType){

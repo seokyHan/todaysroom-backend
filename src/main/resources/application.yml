@@ -125,7 +125,6 @@ exclude:
     /users/logout,
     /users/signup,
     /users/email-check,
-    /users/signup,
     /users/reissue,
     /news
 

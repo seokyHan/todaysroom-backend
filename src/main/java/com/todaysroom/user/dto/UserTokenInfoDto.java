@@ -13,7 +13,7 @@ public record UserTokenInfoDto(String accessToken,
                                String userName,
                                String nickname,
                                String recentSearch,
-                               List<String> authorities) {
+                               String authorities) {
 
     @Builder
     public UserTokenInfoDto {
