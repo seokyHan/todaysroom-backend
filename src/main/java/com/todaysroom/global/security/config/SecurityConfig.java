@@ -117,11 +117,19 @@ public class SecurityConfig{
 
     @NotNull
     private RequestMatcher[] getUserMatchers() {
-        return new RequestMatcher[]{antMatcher(POST, "/users/**"), antMatcher(GET, "/codes/**"), antMatcher(POST, "/files/**"), antMatcher(POST, "/batch/**")};
+        return new RequestMatcher[]{antMatcher(POST, "/users/**"),
+                antMatcher(GET, "/map/**"),
+                antMatcher(POST, "/files/**"),
+                antMatcher(POST, "/batch/**")
+        };
     }
 
     @NotNull
     private RequestMatcher[] getAdminMatcher() {
-        return new RequestMatcher[]{antMatcher(PUT, "/subscriptions/*/status"), antMatcher(PUT, "/subscriptions/*/customer")};
+        return new RequestMatcher[]{antMatcher(POST, "/users/**"),
+                antMatcher(GET, "/map/**"),
+                antMatcher(POST, "/files/**"),
+                antMatcher(POST, "/batch/**")
+        };
     }
 }
