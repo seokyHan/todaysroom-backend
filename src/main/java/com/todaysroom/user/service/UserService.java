@@ -84,9 +84,7 @@ public class UserService {
         Authentication authentication = tokenProvider.getAuthentication(userTokenInfoDto.accessToken());
         String refreshToken = (String)redisTemplate.opsForValue().get(REFRESHTOKEN_KEY + authentication.getName());
 
-        if(refreshToken != null){
-            redisTemplate.delete(REFRESHTOKEN_KEY + authentication.getName());
-        }
+        if(refreshToken != null) redisTemplate.delete(REFRESHTOKEN_KEY + authentication.getName());
 
         ZonedDateTime zdt = ZonedDateTime.of(LocalDateTime.now(), ZoneId.systemDefault());
         long now = zdt.toInstant().toEpochMilli();
@@ -98,34 +96,23 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<UserTokenInfoDto> reissue() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    public ResponseEntity<UserTokenInfoDto> reissue(String cookieRefreshToken) {
+        Authentication authentication = tokenProvider.getAuthentication(cookieRefreshToken);
+
         String refreshToken = (String)redisTemplate.opsForValue().get(REFRESHTOKEN_KEY + authentication.getName());
-
-        // Redis 저장된 RefreshToken 찾은 후 없으면 401 에러
-        if(ObjectUtils.isEmpty(refreshToken)){
-            throw new CustomException(UNAUTHORIZED, "토큰 정보 미존재");
-        }
-
-        // RefreshToken이 만료 됐는지
-        if (redisTemplate.opsForValue().get(refreshToken) == null) {
-            throw new CustomException(TOKEN_EXPIRED, "refreshToken 만료");
-        }
+        if (refreshToken == null || ObjectUtils.isEmpty(refreshToken)) throw new CustomException(TOKEN_EXPIRED, "refreshToken 만료"); // RefreshToken이 만료 여부
 
         UserEntity userInfo = userRepository.findByUserEmail(authentication.getName());
+        if (userInfo == null) throw new CustomException(USER_NOT_FOUND, "해당 User를 찾을 수 없습니다.");
 
-        if (userInfo == null) {
-            throw new CustomException(USER_NOT_FOUND, "해당 User를 찾을 수 없습니다.");
-        }
-
-        UserTokenInfoDto responseUserTokenInfo = generateUserTokenInfo(authentication, userInfo);
+        UserTokenInfoDto userTokenInfoDto = generateUserTokenInfo(authentication, userInfo);
 
         setTokenInRedis(REFRESHTOKEN_KEY.getItem() + authentication.getName(),
-                responseUserTokenInfo.refreshToken(),
-                tokenProvider.getExpiration(responseUserTokenInfo.refreshToken()),
+                userTokenInfoDto.refreshToken(),
+                tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
                 TimeUnit.MILLISECONDS);
 
-        return setResponseData(responseUserTokenInfo);
+        return setResponseData(userTokenInfoDto);
     }
 
     @Transactional
