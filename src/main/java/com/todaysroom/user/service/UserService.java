@@ -2,7 +2,6 @@ package com.todaysroom.user.service;
 
 
 import com.todaysroom.global.exception.CustomException;
-import com.todaysroom.global.types.AuthType;
 import com.todaysroom.global.types.Role;
 import com.todaysroom.user.dto.UserLoginDto;
 import com.todaysroom.user.dto.UserSignupDto;
@@ -14,8 +13,6 @@ import com.todaysroom.global.security.jwt.TokenProvider;
 import com.todaysroom.user.repository.AuthorityRepository;
 import com.todaysroom.user.repository.UserAuthorityRepository;
 import com.todaysroom.user.repository.UserRepository;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -36,13 +33,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.todaysroom.global.exception.code.AuthResponseCode.*;
 import static com.todaysroom.global.types.AuthType.*;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.HttpHeaders.SET_COOKIE;
 
 @Service
 @Slf4j
@@ -70,7 +67,7 @@ public class UserService {
 
         UserTokenInfoDto userTokenInfoDto = generateUserTokenInfo(authentication, userEntity);
 
-        setTokenInRedis(REFRESHTOKEN_KEY + userTokenInfoDto.userEmail(),
+        setTokenInRedis(REFRESH_TOKEN + userTokenInfoDto.userEmail(),
                 userTokenInfoDto.refreshToken(),
                 tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
                 TimeUnit.MILLISECONDS);
@@ -82,9 +79,9 @@ public class UserService {
     public ResponseEntity userLogout(UserTokenInfoDto userTokenInfoDto){
         // 1. Access Token 에서 User email 을 가져옴.
         Authentication authentication = tokenProvider.getAuthentication(userTokenInfoDto.accessToken());
-        String refreshToken = (String)redisTemplate.opsForValue().get(REFRESHTOKEN_KEY + authentication.getName());
+        String refreshToken = (String)redisTemplate.opsForValue().get(REFRESH_TOKEN + authentication.getName());
 
-        if(refreshToken != null) redisTemplate.delete(REFRESHTOKEN_KEY + authentication.getName());
+        if(refreshToken != null) redisTemplate.delete(REFRESH_TOKEN + authentication.getName());
 
         ZonedDateTime zdt = ZonedDateTime.of(LocalDateTime.now(), ZoneId.systemDefault());
         long now = zdt.toInstant().toEpochMilli();
@@ -92,14 +89,16 @@ public class UserService {
 
         setTokenInRedis(userTokenInfoDto.accessToken(), "logout", (expiration - now), TimeUnit.MILLISECONDS);
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok()
+                .header(SET_COOKIE, setLogOutCookie().toString())
+                .body(null);
     }
 
     @Transactional
     public ResponseEntity<UserTokenInfoDto> reissue(String cookieRefreshToken) {
         Authentication authentication = tokenProvider.getAuthentication(cookieRefreshToken);
 
-        String refreshToken = (String)redisTemplate.opsForValue().get(REFRESHTOKEN_KEY + authentication.getName());
+        String refreshToken = (String)redisTemplate.opsForValue().get(REFRESH_TOKEN + authentication.getName());
         if (refreshToken == null || ObjectUtils.isEmpty(refreshToken)) throw new CustomException(TOKEN_EXPIRED, "refreshToken 만료"); // RefreshToken이 만료 여부
 
         UserEntity userInfo = userRepository.findByUserEmail(authentication.getName());
@@ -107,7 +106,7 @@ public class UserService {
 
         UserTokenInfoDto userTokenInfoDto = generateUserTokenInfo(authentication, userInfo);
 
-        setTokenInRedis(REFRESHTOKEN_KEY.getItem() + authentication.getName(),
+        setTokenInRedis(REFRESH_TOKEN.getItem() + authentication.getName(),
                 userTokenInfoDto.refreshToken(),
                 tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
                 TimeUnit.MILLISECONDS);
@@ -133,7 +132,7 @@ public class UserService {
 
         UserTokenInfoDto userTokenInfoDto = generateUserTokenInfo(accessToken, refreshToken, userEntity);
 
-        setTokenInRedis(REFRESHTOKEN_KEY.getItem() + userTokenInfoDto.userEmail(),
+        setTokenInRedis(REFRESH_TOKEN.getItem() + userTokenInfoDto.userEmail(),
                 userTokenInfoDto.refreshToken(),
                 tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
                 TimeUnit.MILLISECONDS);
@@ -172,7 +171,7 @@ public class UserService {
     }
 
     private ResponseEntity<UserTokenInfoDto> setResponseData(UserTokenInfoDto userTokenInfoDto) {
-        ResponseCookie cookie = ResponseCookie.from(REFRESHTOKEN_KEY.getItem(), userTokenInfoDto.refreshToken())
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN.getItem(), userTokenInfoDto.refreshToken())
                 .maxAge(12096000)
                 .path("/")
                 .secure(true)
@@ -181,9 +180,21 @@ public class UserService {
                 .build();
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(AUTHORIZATION, userTokenInfoDto.accessToken());
-        httpHeaders.add(COOKIE_HEADER.getItem(), cookie.toString());
+        httpHeaders.add(SET_COOKIE, cookie.toString());
 
-        return new ResponseEntity<>(userTokenInfoDto, httpHeaders, HttpStatus.OK);
+        return ResponseEntity.ok()
+                .headers(httpHeaders)
+                .body(userTokenInfoDto);
+    }
+
+    private ResponseCookie setLogOutCookie(){
+        return ResponseCookie.from(REFRESH_TOKEN.getItem(), "")
+                .maxAge(1)
+                .path("/")
+                .secure(true)
+                .sameSite("None")
+                .httpOnly(true)
+                .build();
     }
 
     private void setTokenInRedis(String key, String value, long expiration, TimeUnit time){
