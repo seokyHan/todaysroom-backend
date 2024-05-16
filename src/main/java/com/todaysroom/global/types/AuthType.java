@@ -7,11 +7,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum AuthType {
 
-    AUTHORITIES_KEY("auth"),
-    COOKIE_HEADER("Set-Cookie"),
-    REFRESHTOKEN_KEY("refreshToken"),
-    HEADER_VALUE("refreshToken="),
-    REISSUE_HEADER("cookie"),
+    AUTH("auth"),
+    REFRESH_TOKEN("refreshToken"),
     TOKEN_HEADER("Bearer ");
 
     private final String item;
