@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 import static com.todaysroom.global.security.jwt.types.TokenType.ACCESS_TOKEN;
 import static com.todaysroom.global.security.jwt.types.TokenType.REFRESH_TOKEN;
-import static com.todaysroom.global.types.AuthType.AUTHORITIES_KEY;
+import static com.todaysroom.global.types.AuthType.AUTH;
 
 @Slf4j
 @Component
@@ -60,7 +60,7 @@ public class TokenProvider{
                 .setSubject(email)
 //                .setIssuer(format("https://%s",host))
 //                .setAudience(host)
-                .claim(AUTHORITIES_KEY.getItem(), role)
+                .claim(AUTH.getItem(), role)
                 .setExpiration(getTokenExpiration(ACCESS_TOKEN))  //토큰 만료 시간 설정
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
@@ -71,7 +71,7 @@ public class TokenProvider{
         return Jwts.builder()
                 .setHeader(jwtHeader)
                 .setSubject(email)
-                .claim(AUTHORITIES_KEY.getItem(), role)
+                .claim(AUTH.getItem(), role)
                 .setExpiration(getTokenExpiration(REFRESH_TOKEN))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
@@ -88,7 +88,7 @@ public class TokenProvider{
         String accessToken = Jwts.builder()
                 .setHeader(jwtHeader)
                 .setSubject(authentication.getName())
-                .claim(AUTHORITIES_KEY.getItem(), authorities)
+                .claim(AUTH.getItem(), authorities)
                 .setExpiration(getTokenExpiration(ACCESS_TOKEN))  //토큰 만료 시간 설정
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
@@ -98,7 +98,7 @@ public class TokenProvider{
         String refreshToken = Jwts.builder()
                 .setHeader(jwtHeader)
                 .setSubject(authentication.getName())
-                .claim(AUTHORITIES_KEY.getItem(), authorities)
+                .claim(AUTH.getItem(), authorities)
                 .setExpiration(getTokenExpiration(REFRESH_TOKEN))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
@@ -120,7 +120,7 @@ public class TokenProvider{
                 .getBody();
 
         Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get(AUTHORITIES_KEY.getItem()).toString().split(","))
+                Arrays.stream(claims.get(AUTH.getItem()).toString().split(","))
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
