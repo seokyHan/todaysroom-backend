@@ -23,8 +23,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.concurrent.TimeUnit;
 
-import static com.todaysroom.global.types.AuthType.COOKIE_HEADER;
-import static com.todaysroom.global.types.AuthType.REFRESHTOKEN_KEY;
+import static org.springframework.http.HttpHeaders.SET_COOKIE;
+import static com.todaysroom.global.types.AuthType.REFRESH_TOKEN;
 
 @Slf4j
 @Component
@@ -62,14 +62,14 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private void loginSuccess(HttpServletResponse response, CustomOAuth2User oAuth2User) throws IOException{
         String accessToken = tokenProvider.oAuth2CreateAccessToken(oAuth2User.getEmail(), Role.USER);
         String refreshToken = tokenProvider.oAuth2CreateRefreshToken(oAuth2User.getEmail(), Role.USER);
-        String redisRtk = (String)redisTemplate.opsForValue().get(REFRESHTOKEN_KEY.getItem() + oAuth2User.getEmail());
+        String redisRtk = (String)redisTemplate.opsForValue().get(REFRESH_TOKEN.getItem() + oAuth2User.getEmail());
 
         if(StringUtils.hasText(redisRtk)){
-            redisTemplate.delete(REFRESHTOKEN_KEY.getItem() + oAuth2User.getEmail());
+            redisTemplate.delete(REFRESH_TOKEN.getItem() + oAuth2User.getEmail());
         }
 
         redisTemplate.opsForValue()
-                .set(REFRESHTOKEN_KEY.getItem() + oAuth2User.getEmail(),
+                .set(REFRESH_TOKEN.getItem() + oAuth2User.getEmail(),
                         refreshToken,
                         tokenProvider.getExpiration(refreshToken),
                         TimeUnit.MILLISECONDS);
@@ -81,7 +81,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         setCookie(response, "recentSearch", userEntity.getRecentSearch() == null ? "" : userEntity.getRecentSearch());
         setCookie(response, "socialLogin", "success");
         setTokenToCookie(response, "auth", accessToken, 36000, true, false);
-        setTokenToCookie(response, REFRESHTOKEN_KEY.getItem(), refreshToken, 1209600, true, true);
+        setTokenToCookie(response, REFRESH_TOKEN.getItem(), refreshToken, 1209600, true, true);
 
         response.sendRedirect(userRedirectUrl);
     }
@@ -91,7 +91,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 .path("/")
                 .build();
 
-        response.addHeader(COOKIE_HEADER.getItem(), cookie.toString());
+        response.addHeader(SET_COOKIE, cookie.toString());
     }
 
     private void setTokenToCookie(HttpServletResponse response,
@@ -108,7 +108,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 .httpOnly(isHttp)
                 .build();
 
-        response.addHeader(COOKIE_HEADER.getItem(), cookie.toString());
+        response.addHeader(SET_COOKIE, cookie.toString());
     }
 
 
