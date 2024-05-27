@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -25,37 +27,31 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<UserTokenInfoDto> login(@Valid @RequestBody UserLoginDto userLoginDto) {
-
         return userService.userLogin(userLoginDto);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity logout(@RequestBody UserTokenInfoDto userTokenInfoDto) {
-
-        return userService.userLogout(userTokenInfoDto);
+    public ResponseEntity logout(HttpServletRequest request) {
+        return userService.userLogout(request);
     }
 
     @PostMapping("/reissue")
-    public ResponseEntity<UserTokenInfoDto> reissue(HttpServletRequest request){
-
-        return userService.reissue(request);
+    public ResponseEntity<UserTokenInfoDto> reissue(@CookieValue("refreshToken") String cookieRefreshToken){
+        return userService.reissue(cookieRefreshToken);
     }
 
     @PostMapping("/social/signup")
-    public ResponseEntity<UserTokenInfoDto> socialUserSignUp() throws Exception{
-
+    public ResponseEntity<UserTokenInfoDto> socialUserSignUp(){
         return userService.socialUserSignUp();
     }
 
     @PostMapping("/signup")
-    public ResponseEntity signup(@Valid @RequestBody UserSignupDto userSignupDto) throws Exception {
-
+    public ResponseEntity signup(@Valid @RequestBody UserSignupDto userSignupDto){
         return userService.signup(userSignupDto);
     }
 
     @GetMapping("/email-check")
     public ResponseEntity<Boolean> isDuplicateEmail(@RequestParam("userEmail") String userEmail){
-
         return new ResponseEntity(userService.validateDuplicatedEmail(userEmail), HttpStatus.OK);
     }
 

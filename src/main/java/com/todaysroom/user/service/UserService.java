@@ -13,6 +13,7 @@ import com.todaysroom.global.security.jwt.TokenProvider;
 import com.todaysroom.user.repository.AuthorityRepository;
 import com.todaysroom.user.repository.UserAuthorityRepository;
 import com.todaysroom.user.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -76,18 +77,18 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity userLogout(UserTokenInfoDto userTokenInfoDto){
-        // 1. Access Token 에서 User email 을 가져옴.
-        Authentication authentication = tokenProvider.getAuthentication(userTokenInfoDto.accessToken());
+    public ResponseEntity userLogout(HttpServletRequest request){
+        String accessToken = tokenProvider.resolveToken(request);
+        Authentication authentication = tokenProvider.getAuthentication(accessToken);
         String refreshToken = (String)redisTemplate.opsForValue().get(REFRESH_TOKEN + authentication.getName());
 
         if(refreshToken != null) redisTemplate.delete(REFRESH_TOKEN + authentication.getName());
 
         ZonedDateTime zdt = ZonedDateTime.of(LocalDateTime.now(), ZoneId.systemDefault());
         long now = zdt.toInstant().toEpochMilli();
-        long expiration = tokenProvider.getExpiration(userTokenInfoDto.accessToken());
+        long expiration = tokenProvider.getExpiration(accessToken);
 
-        setTokenInRedis(userTokenInfoDto.accessToken(), "logout", (expiration - now), TimeUnit.MILLISECONDS);
+        setTokenInRedis(accessToken, "logout", (expiration - now), TimeUnit.MILLISECONDS);
 
         return ResponseEntity.ok()
                 .header(SET_COOKIE, setLogOutCookie().toString())
@@ -99,7 +100,7 @@ public class UserService {
         Authentication authentication = tokenProvider.getAuthentication(cookieRefreshToken);
 
         String refreshToken = (String)redisTemplate.opsForValue().get(REFRESH_TOKEN + authentication.getName());
-        if (refreshToken == null || ObjectUtils.isEmpty(refreshToken)) throw new CustomException(TOKEN_EXPIRED, "refreshToken 만료"); // RefreshToken이 만료 여부
+        if (refreshToken == null || ObjectUtils.isEmpty(refreshToken)) throw new CustomException(REFRESH_TOKEN_EXPIRED, "refreshToken 만료"); // RefreshToken이 만료 여부
 
         UserEntity userInfo = userRepository.findByUserEmail(authentication.getName());
         if (userInfo == null) throw new CustomException(USER_NOT_FOUND, "해당 User를 찾을 수 없습니다.");

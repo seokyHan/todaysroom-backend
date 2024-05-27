@@ -16,7 +16,7 @@ public enum AuthResponseCode implements ResponseCode {
     USER_NOT_FOUND("3", HttpStatus.NOT_FOUND),
     AUTH_FAIL("4", HttpStatus.UNAUTHORIZED),
     USER_SECURITY_NOT_FOUND("5", HttpStatus.NOT_FOUND),
-    UNAUTHORIZED_TOKEN_ERROR("6", HttpStatus.UNAUTHORIZED),
+    REFRESH_TOKEN_EXPIRED("6", HttpStatus.UNAUTHORIZED),
             ;
 
     private final String code;

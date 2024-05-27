@@ -10,15 +10,18 @@ import com.todaysroom.global.types.AuthType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.security.Key;
 import java.time.LocalDateTime;
@@ -33,6 +36,7 @@ import java.util.stream.Collectors;
 import static com.todaysroom.global.security.jwt.types.TokenType.ACCESS_TOKEN;
 import static com.todaysroom.global.security.jwt.types.TokenType.REFRESH_TOKEN;
 import static com.todaysroom.global.types.AuthType.AUTH;
+import static com.todaysroom.global.types.AuthType.TOKEN_HEADER;
 
 @Slf4j
 @Component
@@ -139,6 +143,15 @@ public class TokenProvider{
                 .getExpiration();
 
         return expiration.getTime();
+    }
+
+    public String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith(TOKEN_HEADER.getItem())){
+            return bearerToken.substring(TOKEN_HEADER.getItem().length());
+        }
+
+        return null;
     }
 
     public boolean validateToken(String token) {

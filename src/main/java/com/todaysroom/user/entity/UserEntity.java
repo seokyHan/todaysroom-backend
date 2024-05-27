@@ -79,6 +79,7 @@ public class UserEntity extends BaseTimeEntity {
                       String password,
                       String userName,
                       String nickname,
+                      String recentSearch,
                       List<UserAuthority> authorities,
                       String imageUrl,
                       SocialType socialType,
@@ -89,6 +90,7 @@ public class UserEntity extends BaseTimeEntity {
         this.password = password;
         this.userName = userName;
         this.nickname = nickname;
+        this.recentSearch = recentSearch;
         this.imageUrl = imageUrl;
         this.socialType = socialType;
         this.socialId = socialId;
