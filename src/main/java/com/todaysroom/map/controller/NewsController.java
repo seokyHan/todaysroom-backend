@@ -30,7 +30,7 @@ public class NewsController {
             for (Element article : articles) {
                 String imageUrl = article.select(".photo img[src]").attr("src");
                 String newsTitle = article.select("dt > a").text();
-                String newsLink = "https://land.naver.com" + article.select("dt > a").attr("href");
+                String newsLink = article.select("dt > a").attr("href");
                 String writing = article.select("dd > span.writing").text();
                 String date = article.select("dd > span.date").text();
                 String newsContent = article.select("dd").get(0).text();
