@@ -6,6 +6,7 @@ import com.todaysroom.user.dto.UserTokenInfoDto;
 import com.todaysroom.user.dto.UserLoginDto;
 import com.todaysroom.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,8 +37,8 @@ public class UserController {
     }
 
     @PostMapping("/reissue")
-    public ResponseEntity<UserTokenInfoDto> reissue(@CookieValue("refreshToken") String cookieRefreshToken){
-        return userService.reissue(cookieRefreshToken);
+    public ResponseEntity<UserTokenInfoDto> reissue(@CookieValue("refreshToken") String cookieRefreshToken, HttpServletResponse response){
+        return userService.reissue(cookieRefreshToken, response);
     }
 
     @PostMapping("/social/signup")

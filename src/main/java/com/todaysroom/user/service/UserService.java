@@ -14,6 +14,7 @@ import com.todaysroom.user.repository.AuthorityRepository;
 import com.todaysroom.user.repository.UserAuthorityRepository;
 import com.todaysroom.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -96,14 +97,19 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<UserTokenInfoDto> reissue(String cookieRefreshToken) {
+    public ResponseEntity<UserTokenInfoDto> reissue(String cookieRefreshToken, HttpServletResponse response) {
         Authentication authentication = tokenProvider.getAuthentication(cookieRefreshToken);
 
         String refreshToken = (String)redisTemplate.opsForValue().get(REFRESH_TOKEN + authentication.getName());
-        if (refreshToken == null || ObjectUtils.isEmpty(refreshToken)) throw new CustomException(REFRESH_TOKEN_EXPIRED, "refreshToken 만료"); // RefreshToken이 만료 여부
+        // RefreshToken이 만료 여부
+        if (refreshToken == null || ObjectUtils.isEmpty(refreshToken)) {
+            redisTemplate.delete(REFRESH_TOKEN + authentication.getName());
+            response.setHeader(SET_COOKIE, setLogOutCookie().toString());
+            throw new CustomException(REFRESH_TOKEN_EXPIRED, "refreshToken 만료");
+        }
 
         UserEntity userInfo = userRepository.findByUserEmail(authentication.getName());
-        if (userInfo == null) throw new CustomException(USER_NOT_FOUND, "해당 User를 찾을 수 없습니다.");
+        if (userInfo == null) throw new CustomException(USER_NOT_FOUND, "해당 User를 찾을 수 없습니다. 관리자에게 문의 바랍니다.");
 
         UserTokenInfoDto userTokenInfoDto = generateUserTokenInfo(authentication, userInfo);
 

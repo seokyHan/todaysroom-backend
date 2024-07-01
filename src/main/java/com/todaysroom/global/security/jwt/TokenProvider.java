@@ -64,7 +64,7 @@ public class TokenProvider{
                 .setSubject(email)
 //                .setIssuer(format("https://%s",host))
 //                .setAudience(host)
-                .claim(AUTH.getItem(), role)
+                .claim(AUTH.getItem(), role.getKey())
                 .setExpiration(getTokenExpiration(ACCESS_TOKEN))  //토큰 만료 시간 설정
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();

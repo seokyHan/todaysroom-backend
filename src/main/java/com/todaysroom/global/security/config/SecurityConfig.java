@@ -79,6 +79,7 @@ public class SecurityConfig{
     public SecurityFilterChain config(HttpSecurity http) throws Exception {
         AuthorityAuthorizationManager<RequestAuthorizationContext> user = AuthorityAuthorizationManager.hasAuthority("ROLE_USER");
         AuthorityAuthorizationManager<RequestAuthorizationContext> admin = AuthorityAuthorizationManager.hasAuthority("ROLE_ADMIN");
+        AuthorityAuthorizationManager<RequestAuthorizationContext> guest = AuthorityAuthorizationManager.hasAuthority("ROLE_GUEST");
         AntPathRequestMatcher[] antPathRequestMatchers = stream(excludeProperties.path()).map(AntPathRequestMatcher::antMatcher).toArray(AntPathRequestMatcher[]::new);
 
         http
@@ -87,6 +88,7 @@ public class SecurityConfig{
                 .authorizeHttpRequests(auth ->
                         auth
                                 .requestMatchers(antPathRequestMatchers).permitAll()
+                                .requestMatchers(getGuestMatchers()).access(guest)
                                 .requestMatchers(getUserMatchers()).access(user)
                                 .requestMatchers(getAdminMatcher()).access(admin)
                                 .anyRequest().authenticated()
@@ -130,6 +132,12 @@ public class SecurityConfig{
                 antMatcher(GET, "/map/**"),
                 antMatcher(POST, "/files/**"),
                 antMatcher(POST, "/batch/**")
+        };
+    }
+
+    @NotNull
+    private RequestMatcher[] getGuestMatchers() {
+        return new RequestMatcher[]{antMatcher(POST, "/users/social/signup"),
         };
     }
 }
