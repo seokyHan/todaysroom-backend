@@ -1,6 +1,7 @@
 package com.todaysroom.map.service;
 
 
+import com.querydsl.core.util.StringUtils;
 import com.todaysroom.batch.service.CronService;
 import com.todaysroom.likeHouse.entity.LikeHouse;
 import com.todaysroom.likeHouse.repository.LikeHouseRepository;
@@ -14,6 +15,7 @@ import com.todaysroom.map.repository.HouseInfoRepository;
 import com.todaysroom.map.repository.SidoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.internal.StringUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -65,7 +67,9 @@ public class HouseMapService {
     }
 
     public List<HouseInfoDto> getHouseInfoRecommend(String dongName){
-        List<HouseInfo> houseInfoList = houseInfoRepository.recommendHouseInfo(dongName);
+        List<HouseInfo> houseInfoList = StringUtils.isNullOrEmpty(dongName) ?
+                houseInfoRepository.recommendHouseInfo() :
+                houseInfoRepository.recommendHouseInfoByDongName(dongName);
         return houseInfoList.stream().map(HouseInfoDto::from).collect(Collectors.toList());
     }
 
