@@ -2,6 +2,7 @@ package com.todaysroom.oauth2.handler;
 
 import com.todaysroom.oauth2.common.CustomOAuth2User;
 import com.todaysroom.global.types.Role;
+import com.todaysroom.oauth2.props.OAuth2Properties;
 import com.todaysroom.user.entity.UserEntity;
 import com.todaysroom.global.security.jwt.TokenProvider;
 import com.todaysroom.user.repository.UserRepository;
@@ -34,10 +35,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final TokenProvider tokenProvider;
     private final UserRepository userRepository;
     private final RedisTemplate redisTemplate;
-    @Value("${oauth.redirect-url-guest}")
-    private String guestRedirectUrl;
-    @Value("${oauth.redirect-url-user}")
-    private String userRedirectUrl;
+    private final OAuth2Properties oAuth2Properties;
+
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
@@ -50,9 +49,10 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
                 setCookie(response, "isFirst", "true");
                 setTokenToCookie(response, "auth", accessToken, 36000, true, false);
-                response.sendRedirect(userRedirectUrl);
+                response.sendRedirect(oAuth2Properties.redirectUrl());
+            }else{
+                loginSuccess(response, oAuth2User); // 로그인에 성공한 경우 access, refresh 토큰 생성
             }
-            loginSuccess(response, oAuth2User); // 로그인에 성공한 경우 access, refresh 토큰 생성
 
         } catch (Exception e){
             log.info("error : {}", e.getMessage());
@@ -83,7 +83,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         setTokenToCookie(response, "auth", accessToken, 36000, true, false);
         setTokenToCookie(response, REFRESH_TOKEN.getItem(), refreshToken, 1209600, true, true);
 
-        response.sendRedirect(userRedirectUrl);
+        response.sendRedirect(oAuth2Properties.redirectUrl());
     }
 
     private void setCookie(HttpServletResponse response, String name, String value) throws UnsupportedEncodingException {
@@ -97,7 +97,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private void setTokenToCookie(HttpServletResponse response,
                                   String name,
                                   String value,
-                                  int maxAge,
+                                  long maxAge,
                                   boolean isSecure,
                                   boolean isHttp) throws UnsupportedEncodingException {
         ResponseCookie cookie = ResponseCookie.from(name, URLEncoder.encode(value,"UTF-8"))

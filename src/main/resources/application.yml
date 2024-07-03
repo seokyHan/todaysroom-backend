@@ -90,8 +90,9 @@ jwt:
 
 # oauth2 url
 oauth:
-  redirect-url-guest: http://localhost:8080/signup
-  redirect-url-user: http://localhost:8080/
+  redirect-url: http://localhost:8080
+  access-token-validity-in-milliseconds: 3600000
+  refresh-token-validity-in-milliseconds: 12096000
 
 
 # File
@@ -119,6 +120,7 @@ batch:
 exclude:
   path :
     /map/batch,
+    /images,
     /map/recommend,
     /users/login,
     /users/signup,
