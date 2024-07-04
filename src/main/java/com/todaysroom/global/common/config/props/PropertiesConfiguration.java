@@ -5,6 +5,7 @@ import com.todaysroom.global.security.props.ExcludeProperties;
 import com.todaysroom.global.security.props.JWTProperties;
 import com.todaysroom.map.props.HouseDealProperties;
 import com.todaysroom.map.props.KaKaoProperties;
+import com.todaysroom.oauth2.props.OAuth2Properties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,7 +15,8 @@ import org.springframework.context.annotation.Configuration;
         HouseDealProperties.class,
         KaKaoProperties.class,
         RedisProperties.class,
-        ExcludeProperties.class
+        ExcludeProperties.class,
+        OAuth2Properties.class
 })
 public class PropertiesConfiguration {
 }
