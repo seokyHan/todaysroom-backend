@@ -58,14 +58,13 @@ public class TokenProvider{
     }
 
     public String oAuth2CreateAccessToken(String email, Role role) {
-
         return Jwts.builder()
                 .setHeader(jwtHeader)
                 .setSubject(email)
 //                .setIssuer(format("https://%s",host))
 //                .setAudience(host)
                 .claim(AUTH.getItem(), role.getKey())
-                .setExpiration(getTokenExpiration(ACCESS_TOKEN))  //토큰 만료 시간 설정
+                .setExpiration(getTokenExpiration(ACCESS_TOKEN))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
@@ -75,7 +74,7 @@ public class TokenProvider{
         return Jwts.builder()
                 .setHeader(jwtHeader)
                 .setSubject(email)
-                .claim(AUTH.getItem(), role)
+                .claim(AUTH.getItem(), role.getKey())
                 .setExpiration(getTokenExpiration(REFRESH_TOKEN))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();

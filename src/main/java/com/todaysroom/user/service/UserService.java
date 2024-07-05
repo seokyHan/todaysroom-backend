@@ -99,8 +99,8 @@ public class UserService {
     @Transactional
     public ResponseEntity<UserTokenInfoDto> reissue(String cookieRefreshToken, HttpServletResponse response) {
         Authentication authentication = tokenProvider.getAuthentication(cookieRefreshToken);
-
         String refreshToken = (String)redisTemplate.opsForValue().get(REFRESH_TOKEN + authentication.getName());
+
         // RefreshToken이 만료 여부
         if (refreshToken == null || ObjectUtils.isEmpty(refreshToken)) {
             redisTemplate.delete(REFRESH_TOKEN + authentication.getName());
@@ -113,33 +113,7 @@ public class UserService {
 
         UserTokenInfoDto userTokenInfoDto = generateUserTokenInfo(authentication, userInfo);
 
-        setTokenInRedis(REFRESH_TOKEN.getItem() + authentication.getName(),
-                userTokenInfoDto.refreshToken(),
-                tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
-                TimeUnit.MILLISECONDS);
-
-        return setResponseData(userTokenInfoDto);
-    }
-
-    @Transactional
-    public ResponseEntity<UserTokenInfoDto> socialUserSignUp(){
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        String accessToken = tokenProvider.oAuth2CreateAccessToken(email, Role.USER);
-        String refreshToken = tokenProvider.oAuth2CreateRefreshToken(email, Role.USER);
-
-        UserEntity userEntity = userRepository.findByUserEmail(email);
-        userEntity.socialUserUpdate(Role.USER);
-
-        Authority authority = authorityRepository.findById(2L).orElseThrow(() -> new CustomException(UNAUTHORIZED, "권한이 존재하지 않습니다."));
-        UserAuthority userAuthority = userAuthorityRepository.findByUserEntity(userEntity);
-        userAuthority.authUpdate(authority);
-
-        userAuthorityRepository.save(userAuthority);
-        userRepository.save(userEntity);
-
-        UserTokenInfoDto userTokenInfoDto = generateUserTokenInfo(accessToken, refreshToken, userEntity);
-
-        setTokenInRedis(REFRESH_TOKEN.getItem() + userTokenInfoDto.userEmail(),
+        setTokenInRedis(REFRESH_TOKEN + authentication.getName(),
                 userTokenInfoDto.refreshToken(),
                 tokenProvider.getExpiration(userTokenInfoDto.refreshToken()),
                 TimeUnit.MILLISECONDS);
@@ -226,23 +200,5 @@ public class UserService {
                 .authorities(userAuthorities)
                 .build();
     }
-
-    private UserTokenInfoDto generateUserTokenInfo(String accessToken, String refreshToken, UserEntity userEntity) {
-        String userAuthorities = userEntity.getAuthorities().stream()
-                .map(authority -> authority.getAuth().getAuthorityName())
-                .collect(Collectors.joining(","));
-
-        return UserTokenInfoDto.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .id(userEntity.getId())
-                .userEmail(userEntity.getUserEmail())
-                .userName(userEntity.getUserName())
-                .nickname(userEntity.getNickname())
-                .recentSearch(userEntity.getRecentSearch())
-                .authorities(userAuthorities)
-                .build();
-    }
-
 
 }

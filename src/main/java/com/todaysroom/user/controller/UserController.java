@@ -41,11 +41,6 @@ public class UserController {
         return userService.reissue(cookieRefreshToken, response);
     }
 
-    @PostMapping("/social/signup")
-    public ResponseEntity<UserTokenInfoDto> socialUserSignUp(){
-        return userService.socialUserSignUp();
-    }
-
     @PostMapping("/signup")
     public ResponseEntity signup(@Valid @RequestBody UserSignupDto userSignupDto){
         return userService.signup(userSignupDto);
