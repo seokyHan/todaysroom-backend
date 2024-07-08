@@ -89,6 +89,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         setCookie(response, "id", userEntity.getId().toString());
         setCookie(response, "nickname", userEntity.getNickname());
         setCookie(response, "recentSearch", userEntity.getRecentSearch() == null ? "" : userEntity.getRecentSearch());
+        setCookie(response, "socialLogin", "success");
         setTokenToCookie(response, AUTH, accessToken, oAuth2Properties.accessTokenValidityInMilliseconds(), true, false);
         setTokenToCookie(response, REFRESH_TOKEN, refreshToken, oAuth2Properties.refreshTokenValidityInMilliseconds(), true, true);
 
