@@ -98,14 +98,18 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<UserTokenInfoDto> reissue(String cookieRefreshToken, HttpServletResponse response) {
+        // RefreshToken이 만료 여부
+        if(tokenProvider.isTokenExpired(cookieRefreshToken)){
+            throw new CustomException(REFRESH_TOKEN_EXPIRED, "refreshToken 만료");
+        }
         Authentication authentication = tokenProvider.getAuthentication(cookieRefreshToken);
         String refreshToken = (String)redisTemplate.opsForValue().get(REFRESH_TOKEN + authentication.getName());
 
-        // RefreshToken이 만료 여부
+        // Redis token 예외 처리
         if (refreshToken == null || ObjectUtils.isEmpty(refreshToken)) {
             redisTemplate.delete(REFRESH_TOKEN + authentication.getName());
             response.setHeader(SET_COOKIE, setLogOutCookie().toString());
-            throw new CustomException(REFRESH_TOKEN_EXPIRED, "refreshToken 만료");
+            throw new CustomException(AUTH_FAIL, "redis refreshToken 미존재");
         }
 
         UserEntity userInfo = userRepository.findByUserEmail(authentication.getName());
