@@ -13,7 +13,7 @@ public class Utils {
 
         result.append(billions > 0 ? billions + "억" : "");
         result.append(billions > 0 && thousands > 0 ? " " : "");
-        result.append(thousands);
+        result.append(thousands > 0 ? thousands : "");
 
         return result.toString();
     }

@@ -22,23 +22,23 @@ public class HouseMapController {
     }
 
     @GetMapping("/gugun")
-    public ResponseEntity<List<GuGunDto>> gugunList(@RequestParam("sidoCode") String sidoCode) {
+    public ResponseEntity<List<GuGunDto>> gugunList(@RequestParam String sidoCode) {
         return ResponseEntity.ok(houseMapService.getGugunList(sidoCode));
     }
 
     @GetMapping("/dong")
-    public ResponseEntity<List<DongDto>> dongList(@RequestBody MapRequest mapRequest){
-        return ResponseEntity.ok(houseMapService.getDongList(mapRequest));
+    public ResponseEntity<List<DongDto>> dongList(@RequestParam String sidoName, @RequestParam String gugunName){
+        return ResponseEntity.ok(houseMapService.getDongList(sidoName, gugunName));
     }
 
     @GetMapping("/gugun/house")
-    public ResponseEntity<List<HouseInfoDto>> houseInfoListByGugun(@RequestBody MapRequest mapRequest){
-        return ResponseEntity.ok(houseMapService.getHouseInfoListByGuGun(mapRequest));
+    public ResponseEntity<List<HouseInfoDto>> houseInfoListByGugun(@RequestParam String sidoName, @RequestParam String gugunName){
+        return ResponseEntity.ok(houseMapService.getHouseInfoListByGuGun(sidoName, gugunName));
     }
 
     @GetMapping("/dong/house")
-    public ResponseEntity<List<HouseInfoDto>> houseInfoListByDong(@RequestBody MapRequest mapRequest){
-        return ResponseEntity.ok(houseMapService.getHouseInfoListByDong(mapRequest));
+    public ResponseEntity<List<HouseInfoDto>> houseInfoListByDong(@RequestParam String sidoName, @RequestParam String gugunName, @RequestParam String dongName){
+        return ResponseEntity.ok(houseMapService.getHouseInfoListByDong(sidoName, gugunName, dongName));
     }
 
     @GetMapping("/dong-search")
@@ -52,17 +52,20 @@ public class HouseMapController {
     }
 
     @GetMapping("/gu/liked")
-    public ResponseEntity<List<HouseInfoDto>> userLikedHouseByGuGun(@RequestBody MapRequest mapRequest, @RequestParam("userId") Long userId){
-        return ResponseEntity.ok(houseMapService.getUserLikedHouseListByGuGun(mapRequest, userId));
+    public ResponseEntity<List<HouseInfoDto>> userLikedHouseByGuGun(@RequestParam String sidoName, @RequestParam String gugunName, @RequestParam("userId") Long userId){
+        return ResponseEntity.ok(houseMapService.getUserLikedHouseListByGuGun(sidoName, gugunName, userId));
     }
 
     @GetMapping("/dong/liked")
-    public ResponseEntity<List<HouseInfoDto>> userLikedHouseByDong(@RequestBody MapRequest mapRequest, @RequestParam("userId") Long userId){
-        return ResponseEntity.ok(houseMapService.getUserLikedHouseListByDong(mapRequest, userId));
+    public ResponseEntity<List<HouseInfoDto>> userLikedHouseByDong(@RequestParam String sidoName,
+                                                                   @RequestParam String gugunName,
+                                                                   @RequestParam String dongName,
+                                                                   @RequestParam("userId") Long userId){
+        return ResponseEntity.ok(houseMapService.getUserLikedHouseListByDong(sidoName, gugunName, dongName, userId));
     }
 
     @GetMapping("/dong-search/liked")
-    public ResponseEntity<List<HouseInfoDto>> userLikedHouseByDongSearch(@RequestBody MapRequest mapRequest, @RequestParam("userId") Long userId){
-        return ResponseEntity.ok(houseMapService.getUserLikedHouseListByDongSearch(mapRequest.dongName(), userId));
+    public ResponseEntity<List<HouseInfoDto>> userLikedHouseByDongSearch(@RequestParam String dongName, @RequestParam("userId") Long userId){
+        return ResponseEntity.ok(houseMapService.getUserLikedHouseListByDongSearch(dongName, userId));
     }
 }

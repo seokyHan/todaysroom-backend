@@ -44,20 +44,20 @@ public class HouseMapService {
         return gugunList.stream().map(GuGunDto::from).collect(Collectors.toList());
     }
 
-    public List<DongDto> getDongList(MapRequest mapRequest) {
-        List<Dong> dongList = dongRepository.findDongList(mapRequest.sidoName(), mapRequest.gugunName());
+    public List<DongDto> getDongList(String sidoName, String gugunName) {
+        List<Dong> dongList = dongRepository.findDongList(sidoName, gugunName);
         return dongList.stream().map(DongDto::from).collect(Collectors.toList());
     }
 
-    public List<HouseInfoDto> getHouseInfoListByGuGun(MapRequest mapRequest){
-        String locationOfAgency = String.join(" ",  mapRequest.sidoName(), mapRequest.gugunName());
+    public List<HouseInfoDto> getHouseInfoListByGuGun(String sidoName, String gugunName){
+        String locationOfAgency = String.join(" ",  sidoName, gugunName);
         List<HouseInfo> houseInfoList = houseInfoRepository.findHouseInfoListByGuGun(locationOfAgency);
         return houseInfoList.stream().map(HouseInfoDto::from).collect(Collectors.toList());
     }
 
-    public List<HouseInfoDto> getHouseInfoListByDong(MapRequest mapRequest){
-        String locationOfAgency = String.join(" ",  mapRequest.sidoName(), mapRequest.gugunName());
-        List<HouseInfo> houseInfoList = houseInfoRepository.findHouseInfoListByDong(locationOfAgency, mapRequest.dongName());
+    public List<HouseInfoDto> getHouseInfoListByDong(String sidoName, String gugunName, String dongName){
+        String locationOfAgency = String.join(" ",  sidoName, gugunName);
+        List<HouseInfo> houseInfoList = houseInfoRepository.findHouseInfoListByDong(locationOfAgency, dongName);
         return houseInfoList.stream().map(HouseInfoDto::from).collect(Collectors.toList());
     }
 
@@ -77,9 +77,9 @@ public class HouseMapService {
         return houseInfoRepository.findLikedHouseInfoList(aptCode);
     }
 
-    public List<HouseInfoDto> getUserLikedHouseListByGuGun(MapRequest mapRequest, Long userId){
+    public List<HouseInfoDto> getUserLikedHouseListByGuGun(String sidoName, String gugunName, Long userId){
         Map<String, Boolean> likedStatusMap = setLikedStatus(userId);
-        String locationOfAgency = String.join(" ",  mapRequest.sidoName(), mapRequest.gugunName());
+        String locationOfAgency = String.join(" ",  sidoName, gugunName);
         List<HouseInfoDto> houseInfoList = houseInfoRepository.findHouseInfoListByGuGun(locationOfAgency)
                 .stream()
                 .map(houseInfo -> HouseInfoDto.of(houseInfo, likedStatusMap.containsKey(houseInfo.getAptCode())))
@@ -88,10 +88,10 @@ public class HouseMapService {
         return houseInfoList;
     }
 
-    public List<HouseInfoDto> getUserLikedHouseListByDong(MapRequest mapRequest, Long userId){
+    public List<HouseInfoDto> getUserLikedHouseListByDong(String sidoName, String gugunName, String dongName, Long userId){
         Map<String, Boolean> likedStatusMap = setLikedStatus(userId);
-        String locationOfAgency = String.join(" ",  mapRequest.sidoName(), mapRequest.gugunName());
-        List<HouseInfoDto> houseInfoList = houseInfoRepository.findHouseInfoListByDong(locationOfAgency, mapRequest.dongName())
+        String locationOfAgency = String.join(" ",  sidoName, gugunName);
+        List<HouseInfoDto> houseInfoList = houseInfoRepository.findHouseInfoListByDong(locationOfAgency, dongName)
                 .stream()
                 .map(houseInfo -> HouseInfoDto.of(houseInfo, likedStatusMap.containsKey(houseInfo.getAptCode())))
                 .collect(Collectors.toList());
