@@ -1,6 +1,7 @@
 package com.todaysroom.user.controller;
 
 
+import com.todaysroom.user.dto.UserRecentSearchDto;
 import com.todaysroom.user.dto.UserSignupDto;
 import com.todaysroom.user.dto.UserTokenInfoDto;
 import com.todaysroom.user.dto.UserLoginDto;
@@ -51,4 +52,9 @@ public class UserController {
         return new ResponseEntity(userService.validateDuplicatedEmail(userEmail), HttpStatus.OK);
     }
 
+    @PutMapping("/recent-search")
+    public ResponseEntity<Void> putRecentSearch(@RequestBody UserRecentSearchDto userRecentSearchDto){
+        userService.updateRecentSearch(userRecentSearchDto);
+        return new ResponseEntity(HttpStatus.OK);
+    }
 }

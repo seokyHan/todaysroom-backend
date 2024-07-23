@@ -4,6 +4,7 @@ package com.todaysroom.user.service;
 import com.todaysroom.global.exception.CustomException;
 import com.todaysroom.global.types.Role;
 import com.todaysroom.user.dto.UserLoginDto;
+import com.todaysroom.user.dto.UserRecentSearchDto;
 import com.todaysroom.user.dto.UserSignupDto;
 import com.todaysroom.user.dto.UserTokenInfoDto;
 import com.todaysroom.user.entity.Authority;
@@ -153,6 +154,12 @@ public class UserService {
             return false;
         }
         return true;
+    }
+
+    @Transactional
+    public void updateRecentSearch(UserRecentSearchDto userRecentSearchDto){
+        UserEntity userEntity = userRepository.findById(userRecentSearchDto.id()).orElseThrow(() -> new CustomException(USER_NOT_FOUND, "해당 User를 찾을 수 없습니다. 관리자에게 문의 바랍니다."));
+        userEntity.recentSearchUpdate(userRecentSearchDto.recentSearch());
     }
 
     private ResponseEntity<UserTokenInfoDto> setResponseData(UserTokenInfoDto userTokenInfoDto) {

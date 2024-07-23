@@ -102,5 +102,7 @@ public class UserEntity extends BaseTimeEntity {
         this.role = role;
     }
 
+    public void recentSearchUpdate(String recentSearch){this.recentSearch = recentSearch;}
+
 }
 
